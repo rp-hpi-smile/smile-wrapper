@@ -5,6 +5,7 @@ import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision'
 const emit = defineEmits(['face-detected'])
 
 const videoEl = ref(null)
+const canvasEl = ref(null)
 const errorMsg = ref(null)
 let stream = null
 let faceDetector = null
@@ -15,6 +16,28 @@ function startDetectionLoop() {
   function loop() {
     if (videoEl.value && videoEl.value.readyState >= 2 && faceDetector) {
       const result = faceDetector.detectForVideo(videoEl.value, performance.now())
+
+      if (canvasEl.value) {
+        const canvas = canvasEl.value
+        const ctx = canvas.getContext('2d')
+        canvas.width = canvas.offsetWidth
+        canvas.height = canvas.offsetHeight
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        if (result.detections.length > 0) {
+          const scaleX = canvas.width / videoEl.value.videoWidth
+          const scaleY = canvas.height / videoEl.value.videoHeight
+
+          ctx.strokeStyle = '#00ff00'
+          ctx.lineWidth = 2
+
+          for (const detection of result.detections) {
+            const { originX, originY, width, height } = detection.boundingBox
+            ctx.strokeRect(originX * scaleX, originY * scaleY, width * scaleX, height * scaleY)
+          }
+        }
+      }
+
       if (!hasEmitted && result.detections.length > 0) {
         hasEmitted = true
         emit('face-detected')
@@ -68,12 +91,20 @@ onBeforeUnmount(() => {
   if (stream) {
     stream.getTracks().forEach((track) => track.stop())
   }
+  if (canvasEl.value) {
+    const canvas = canvasEl.value
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
 })
 </script>
 
 <template>
   <div class="webcam-preview">
-    <video v-if="!errorMsg" ref="videoEl" autoplay playsinline muted aria-label="Webcam preview" />
+    <div v-if="!errorMsg" class="video-container">
+      <video ref="videoEl" autoplay playsinline muted aria-label="Webcam preview" />
+      <canvas ref="canvasEl" class="face-overlay" />
+    </div>
     <div v-else class="webcam-error" role="alert">{{ errorMsg }}</div>
   </div>
 </template>
@@ -90,10 +121,25 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
+.video-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.face-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .webcam-error {
