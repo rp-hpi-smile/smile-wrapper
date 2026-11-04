@@ -1,6 +1,11 @@
 <script setup>
 import { reactive, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import WebcamPreview from '../components/WebcamPreview.vue'
+import { useSessionStore } from '../stores/session.js'
+
+const sessionStore = useSessionStore()
+const router = useRouter()
 
 const form = reactive({
   participant_id: '',
@@ -11,14 +16,15 @@ function handleFaceDetected() {
   if (form.participant_id === '' && form.session_id === '') {
     form.participant_id = 'P-' + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
     form.session_id = 'S-' + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
+    sessionStore.setSession(form.participant_id, form.session_id)
   }
 }
 
 const canBegin = computed(() => form.participant_id !== '' && form.session_id !== '')
 
 function handleSubmit() {
-  // Emit or route on successful login
-  console.log('Login submitted', { ...form })
+  sessionStore.setSession(form.participant_id, form.session_id)
+  router.push('/intake')
 }
 </script>
 

@@ -11,6 +11,11 @@ const router = createRouter({
       component: LoginView,
     },
     {
+      path: '/intake',
+      name: 'intake',
+      component: () => import('../views/IntakeView.vue'),
+    },
+    {
       path: '/app',
       name: 'app',
       component: AppView,
