@@ -3,6 +3,7 @@ import { reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import WebcamPreview from '../components/WebcamPreview.vue'
 import { useSessionStore } from '../stores/session.js'
+import { md5 } from '../utils/md5.js'
 
 const sessionStore = useSessionStore()
 const router = useRouter()
@@ -15,7 +16,7 @@ const form = reactive({
 function handleFaceDetected() {
   if (form.participant_id === '' && form.session_id === '') {
     form.participant_id = 'P-' + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
-    form.session_id = 'S-' + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
+    form.session_id = md5(form.participant_id + ':' + Date.now())
     sessionStore.setSession(form.participant_id, form.session_id)
   }
 }
@@ -61,7 +62,7 @@ function handleSubmit() {
               type="text"
               autocomplete="off"
               required
-              placeholder="e.g. S-001"
+              placeholder="Auto-generated"
             />
           </div>
 
