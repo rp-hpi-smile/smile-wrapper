@@ -1,8 +1,10 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
 import { useSessionStore } from '../stores/session.js'
+import { useRandomIntake } from '../composables/useRandomIntake.js'
 
 const sessionStore = useSessionStore()
+const { generateRandomData } = useRandomIntake()
 
 const form = reactive({
   full_name: '',
@@ -16,6 +18,20 @@ const form = reactive({
   heart_rate: '',
   spo2: '',
 })
+
+let dataGenerated = false
+
+watch(
+  [() => sessionStore.participant_id, () => sessionStore.session_id],
+  ([pid, sid]) => {
+    if (pid && sid && !dataGenerated) {
+      const data = generateRandomData()
+      Object.assign(form, data)
+      dataGenerated = true
+    }
+  },
+  { immediate: true },
+)
 
 function handleSave() {
   console.log('Intake form saved', {
@@ -36,11 +52,11 @@ function handleSave() {
       <div class="session-info">
         <div class="info-row">
           <span class="info-label">Participant ID</span>
-          <span class="info-value">{{sessionStore.participant_id || '—'}}</span>
+          <span class="info-value">{{ sessionStore.participant_id || '—' }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">Session ID</span>
-          <span class="info-value">{{sessionStore.session_id || '—'}}</span>
+          <span class="info-value">{{ sessionStore.session_id || '—' }}</span>
         </div>
       </div>
     </header>
@@ -79,7 +95,12 @@ function handleSave() {
 
           <div class="field">
             <label for="contact_number">Contact Number</label>
-            <input id="contact_number" v-model="form.contact_number" type="tel" autocomplete="tel" />
+            <input
+              id="contact_number"
+              v-model="form.contact_number"
+              type="tel"
+              autocomplete="tel"
+            />
           </div>
         </fieldset>
 
