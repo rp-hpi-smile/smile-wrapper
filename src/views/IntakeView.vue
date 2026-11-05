@@ -45,7 +45,7 @@ function handleSave() {
     session_id: sessionStore.session_id,
     ...form,
   })
-  router.push({ name: 'smilefa' })
+  router.push({ name: 'hub' })
 }
 </script>
 

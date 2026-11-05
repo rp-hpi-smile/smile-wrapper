@@ -1,7 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import AppView from '../views/AppView.vue'
 import LoginView from '@/views/LoginView.vue'
-import HubView from '@/views/HubView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -19,10 +18,11 @@ const router = createRouter({
     {
       path: '/hub',
       name: 'hub',
-      component: HubView,
+      component: () => import('../views/HubView.vue'),
+      redirect: '/hub/smilefa',
       children: [
         {
-          path: '',
+          path: 'smilefa',
           name: 'smilefa',
           component: () => import('../views/modules/SmileFaView.vue'),
         },
