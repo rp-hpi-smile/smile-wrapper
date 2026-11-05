@@ -1,8 +1,10 @@
 <script setup>
-import { reactive, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSessionStore } from '../stores/session.js'
 import { useRandomIntake } from '../composables/useRandomIntake.js'
 
+const router = useRouter()
 const sessionStore = useSessionStore()
 const { generateRandomData } = useRandomIntake()
 
@@ -19,6 +21,9 @@ const form = reactive({
   spo2: '',
 })
 
+// All fields must be non-empty strings (or non-zero numbers converted to string)
+const isFormComplete = computed(() => Object.values(form).every((v) => String(v).trim() !== ''))
+
 let dataGenerated = false
 
 watch(
@@ -34,11 +39,13 @@ watch(
 )
 
 function handleSave() {
+  if (!isFormComplete.value) return
   console.log('Intake form saved', {
     participant_id: sessionStore.participant_id,
     session_id: sessionStore.session_id,
     ...form,
   })
+  router.push({ name: 'smilefa' })
 }
 </script>
 
@@ -154,7 +161,7 @@ function handleSave() {
 
       <!-- Footer -->
       <footer class="form-footer">
-        <button type="submit" class="btn-save">Save</button>
+        <button type="submit" class="btn-save" :disabled="!isFormComplete">Save</button>
       </footer>
     </form>
   </main>
@@ -338,5 +345,10 @@ function handleSave() {
 .btn-save:focus-visible {
   outline: 2px solid var(--color-primary, #4a90d9);
   outline-offset: 3px;
+}
+
+.btn-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 </style>
