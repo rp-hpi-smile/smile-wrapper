@@ -26,7 +26,7 @@ import { ref } from 'vue'
 
 const collapsed = ref(false)
 const items = [
-  { icon: '🙂', title: 'Face', route: '/hub' },
+  { icon: '🙂', title: 'Face', route: '/hub/smilefa' },
   { icon: '🗨️', title: 'Speech', route: '/hub/speech' },
   { icon: '👁️', title: 'Pupil', route: '/hub/plr' },
   { icon: '💪', title: 'Arm', route: '/hub/pronator' },
