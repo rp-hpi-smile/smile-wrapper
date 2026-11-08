@@ -164,9 +164,13 @@ IntakeView → Pinia session store
 - **Objective**: Mount the smile-fa Vanilla JS engine inside `SmileFaView.vue`, inject participant data, suppress its own intake screens (S0/S1), and emit its result to the Pinia store on completion.
 - **Implementation**:
   - Copy `smile-fa/js/` → `src/modules/smilefa/`; copy `smile-fa/config/` and `smile-fa/css/`
-  - `SmileFaView.vue`: provides `<div ref="mount">`; on `onMounted`, dynamically imports `smilefa/js/app.js`, initialises it pointing at the mount ref
-  - Patch `smilefa/js/state.js`: export `setParticipant(intake)` to pre-fill `state.meta` from Pinia intake (name, gender, YOB, consent, lang, m10); call before `boot()`
-  - Patch `smilefa/js/app.js`: replace `showScreen('s0')` with `showScreen('s2')` (skip welcome and consent screens since wrapper handled them); hide S0/S1 DOM sections
+  - Patch `smilefa/js/app.js`:
+    - Remove the immediate `boot()` call at the end of the file.
+    - Wrap the `boot()` logic into an exported `async function init(mountElement)` that handles the application startup.
+    - Replace `showScreen('s0')` with `showScreen('s2')` (skip welcome and consent screens since wrapper handled them).
+    - Ensure any DOM manipulations target the provided `mountElement` or exist within its subtree.
+  - `SmileFaView.vue`: provides `<div ref="mount">`; on `onMounted`, dynamically imports `smilefa/js/app.js` and calls `mod.init(mount.value)`.
+  - Patch `smilefa/js/state.js`: export `setParticipant(intake)` to pre-fill `state.meta` from Pinia intake (name, gender, YOB, consent, lang, m10); call before `init()` in `SmileFaView.vue`.
   - Patch `smilefa/js/ui/results.js`: after `renderPublicResult`, call `window.__smileWrapper?.onSmileFaComplete(result)`; `SmileFaView.vue` registers this callback, writes result to `session.results.smilefa`, routes to `/hub`
   - Map smile-fa's `C11_indicator` → hub card `indicator`
 - **Tests**: Vitest — `setParticipant` correctly maps Pinia intake to smile-fa state; result callback writes correct indicator to store
