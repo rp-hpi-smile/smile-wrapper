@@ -336,7 +336,7 @@ onMounted(async () => {
   // setParticipant could be called here with data from the Pinia session store,
   // e.g.: setParticipant(sessionStore.intake)
   // Wired up fully in Task 4 once the Pinia store is in place.
-  const { init, setParticipant } = await import(/* @vite-ignore */ '@/modules/smilefa/js/app.js')
+  const { init, setParticipant } = await import('@/modules/smilefa/js/app.js')
 
   // TODO (Task 4): inject participant data from Pinia before init
   // const sessionStore = useSessionStore()
