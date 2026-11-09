@@ -61,6 +61,12 @@
       aria-label="Consent and symptoms"
       hidden
     >
+      <div class="col col--left">
+        <h2 data-i18n="s1.consent">Consent</h2>
+        <p class="consent-text" data-i18n="s1.consentText">
+          Processing happens on this device. No video or images leave the browser.
+        </p>
+      </div>
       <div class="col col--center">
         <fieldset class="fieldset">
           <legend>Symptoms &amp; history</legend>
@@ -146,6 +152,14 @@
             Continue
           </button>
         </fieldset>
+      </div>
+      <div class="col col--right">
+        <div id="emergency-banner" class="emergency-banner" role="alert" hidden>
+          <strong data-i18n="emergency.title">Call 995 now</strong>
+          <p data-i18n="emergency.fast">
+            FAST: Face drooping, Arm weakness, Speech difficulty — Time to call 995.
+          </p>
+        </div>
       </div>
     </section>
 

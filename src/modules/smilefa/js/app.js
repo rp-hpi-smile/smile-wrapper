@@ -89,9 +89,10 @@ export async function init(mountElement, options = {}) {
     console.error('config load failed', err)
   }
 
-  // Show S0 so the user can pick language. Wire Start to skip S1 (consent
-  // was already collected by the wrapper) and go straight to S2 (camera setup).
-  initWelcome({ onBeginSetup: startSetup, skipConsent: true })
+  // Show S0 so the user can pick language. Start → S1 (consent + participant
+  // data). Once Task 4 Pinia integration is complete and setParticipant() is
+  // called before init(), skipConsent: true can be restored to skip S1.
+  initWelcome({ onBeginSetup: startSetup })
   wireResultActions()
   showScreen('s0')
   // Re-apply translations now that the DOM is fully ready.
