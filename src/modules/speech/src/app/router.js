@@ -30,7 +30,15 @@ export function parseHash(){
   return path;
 }
 
+// Overridable navigate function. When running embedded inside a Vue app,
+// library.js replaces this with a hash-free implementation so go() never
+// touches location.hash and never conflicts with Vue Router.
+let _navigate = null;
+export function setNavigate(fn){ _navigate = fn; }
+export function clearNavigate(){ _navigate = null; }
+
 export function go(name){
+  if(_navigate){ _navigate(name); return; }
   if(location.hash === '#/' + name){ handle(); }
   else location.hash = '#/' + name;
 }
