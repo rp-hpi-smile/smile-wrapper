@@ -1,33 +1,26 @@
 /**
  * SMILE-FA — config.js
  *
- * Loads the JSON config files (landmarks, thresholds, protocol) once and caches
- * them. Uses fetch (works on GitHub Pages) rather than import assertions.
+ * Provides the JSON config files (landmarks, thresholds, protocol, integrations)
+ * as static ES module imports so Vite bundles them at build time.
+ * No fetch needed — eliminates runtime URL resolution issues in the Vue wrapper.
  *
  * @module config
  */
 
-// Resolve config paths relative to this module file, not the document URL,
-// so they work correctly when mounted inside the Vue wrapper.
-const CONFIG_BASE = new URL('../config/', import.meta.url).href
+import landmarks from '../config/landmarks.json'
+import thresholds from '../config/thresholds.json'
+import protocol from '../config/protocol.json'
+import integrations from '../config/integrations.json'
 
 let cache = null
 
 /**
  * Load all configs. Cached after first call.
- * @returns {Promise<{landmarks:object, thresholds:object, protocol:object}>}
+ * @returns {Promise<{landmarks:object, thresholds:object, protocol:object, integrations:object|null}>}
  */
 export async function loadConfigs() {
   if (cache) return cache
-  const [landmarks, thresholds, protocol, integrations] = await Promise.all([
-    fetch(CONFIG_BASE + 'landmarks.json', { cache: 'no-store' }).then((r) => r.json()),
-    fetch(CONFIG_BASE + 'thresholds.json', { cache: 'no-store' }).then((r) => r.json()),
-    fetch(CONFIG_BASE + 'protocol.json', { cache: 'no-store' }).then((r) => r.json()),
-    // Optional integrations config (Google Sheets etc.); tolerate absence.
-    fetch(CONFIG_BASE + 'integrations.json', { cache: 'no-store' })
-      .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null),
-  ])
   cache = { landmarks, thresholds, protocol, integrations }
   return cache
 }

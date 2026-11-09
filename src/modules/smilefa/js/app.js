@@ -105,6 +105,10 @@ export { setParticipant }
 /* ---- S2 setup --------------------------------------------------------- */
 async function startSetup() {
   const video = document.getElementById('setup-video')
+  if (!ctx.cfg) {
+    showCameraError(new Error('Config not loaded — cannot start setup.'))
+    return
+  }
   try {
     ctx.setup = new SetupController({
       video,
