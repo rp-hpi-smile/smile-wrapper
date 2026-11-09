@@ -374,7 +374,6 @@ onUnmounted(() => {
  */
 #smilefa-app {
   margin: -2rem;
-  width: calc(100% + 4rem);
   min-width: 1024px;
 }
 </style>

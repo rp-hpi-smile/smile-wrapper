@@ -8,7 +8,7 @@
  */
 
 import { state, showScreen, setParticipant } from './state.js'
-import { initI18n, t, getLang } from './i18n.js'
+import { initI18n, t, getLang, applyTranslations } from './i18n.js'
 import { setVoiceLang, setVoiceEnabled, speak } from './voice.js'
 import { loadConfigs } from './config.js'
 import { initWelcome } from './ui/welcome.js'
@@ -94,6 +94,8 @@ export async function init(mountElement, options = {}) {
   initWelcome({ onBeginSetup: startSetup, skipConsent: true })
   wireResultActions()
   showScreen('s0')
+  // Re-apply translations now that the DOM is fully ready.
+  applyTranslations()
   mountElement.dataset.smileReady = 'true'
 }
 

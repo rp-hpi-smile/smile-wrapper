@@ -7,12 +7,16 @@
  * @module i18n
  */
 
+import en from '../i18n/en.json'
+import zh from '../i18n/zh.json'
+import ms from '../i18n/ms.json'
+import ta from '../i18n/ta.json'
+
+/** All locales bundled at build time — no fetch needed. */
+const LOCALES = { en, zh, ms, ta }
+
 export const SUPPORTED = ['en', 'zh', 'ta', 'ms']
 const STORAGE_KEY = 'smilefa.lang'
-
-// Resolve i18n paths relative to this module file so they work inside the
-// Vue wrapper (where the document URL is the app root, not this directory).
-const I18N_BASE = new URL('../i18n/', import.meta.url).href
 
 let dict = {}
 let fallback = {}
@@ -31,17 +35,6 @@ export function t(key) {
 }
 
 /**
- * Fetch a locale file.
- * @param {string} lang
- * @returns {Promise<Record<string,string>>}
- */
-async function fetchLocale(lang) {
-  const res = await fetch(`${I18N_BASE}${lang}.json`, { cache: 'no-store' })
-  if (!res.ok) throw new Error(`missing locale ${lang}`)
-  return res.json()
-}
-
-/**
  * Load a language (and English fallback), apply to the DOM, persist choice.
  * @param {string} lang
  * @returns {Promise<void>}
@@ -49,14 +42,8 @@ async function fetchLocale(lang) {
 export async function setLanguage(lang) {
   if (!SUPPORTED.includes(lang)) lang = 'en'
   currentLang = lang
-  if (!Object.keys(fallback).length) {
-    try {
-      fallback = await fetchLocale('en')
-    } catch {
-      fallback = {}
-    }
-  }
-  dict = lang === 'en' ? fallback : await fetchLocale(lang).catch(() => fallback)
+  fallback = LOCALES.en
+  dict = LOCALES[lang] ?? fallback
   try {
     localStorage.setItem(STORAGE_KEY, lang)
   } catch {
