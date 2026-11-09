@@ -7,15 +7,19 @@
  * @module i18n
  */
 
-export const SUPPORTED = ['en', 'zh', 'ta', 'ms'];
-const STORAGE_KEY = 'smilefa.lang';
+export const SUPPORTED = ['en', 'zh', 'ta', 'ms']
+const STORAGE_KEY = 'smilefa.lang'
 
-let dict = {};
-let fallback = {};
-let currentLang = 'en';
+// Resolve i18n paths relative to this module file so they work inside the
+// Vue wrapper (where the document URL is the app root, not this directory).
+const I18N_BASE = new URL('../i18n/', import.meta.url).href
+
+let dict = {}
+let fallback = {}
+let currentLang = 'en'
 
 /** @returns {string} current language code */
-export const getLang = () => currentLang;
+export const getLang = () => currentLang
 
 /**
  * Look up a translation key, falling back to English then the key itself.
@@ -23,7 +27,7 @@ export const getLang = () => currentLang;
  * @returns {string}
  */
 export function t(key) {
-  return dict[key] ?? fallback[key] ?? key;
+  return dict[key] ?? fallback[key] ?? key
 }
 
 /**
@@ -32,9 +36,9 @@ export function t(key) {
  * @returns {Promise<Record<string,string>>}
  */
 async function fetchLocale(lang) {
-  const res = await fetch(`i18n/${lang}.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`missing locale ${lang}`);
-  return res.json();
+  const res = await fetch(`${I18N_BASE}${lang}.json`, { cache: 'no-store' })
+  if (!res.ok) throw new Error(`missing locale ${lang}`)
+  return res.json()
 }
 
 /**
@@ -43,30 +47,38 @@ async function fetchLocale(lang) {
  * @returns {Promise<void>}
  */
 export async function setLanguage(lang) {
-  if (!SUPPORTED.includes(lang)) lang = 'en';
-  currentLang = lang;
+  if (!SUPPORTED.includes(lang)) lang = 'en'
+  currentLang = lang
   if (!Object.keys(fallback).length) {
-    try { fallback = await fetchLocale('en'); } catch { fallback = {}; }
+    try {
+      fallback = await fetchLocale('en')
+    } catch {
+      fallback = {}
+    }
   }
-  dict = lang === 'en' ? fallback : await fetchLocale(lang).catch(() => fallback);
-  try { localStorage.setItem(STORAGE_KEY, lang); } catch { /* ignore */ }
-  document.documentElement.lang = lang;
-  applyTranslations();
+  dict = lang === 'en' ? fallback : await fetchLocale(lang).catch(() => fallback)
+  try {
+    localStorage.setItem(STORAGE_KEY, lang)
+  } catch {
+    /* ignore */
+  }
+  document.documentElement.lang = lang
+  applyTranslations()
 }
 
 /** Apply current dict to all [data-i18n] (textContent) and [data-i18n-ph]
  *  (placeholder) elements. */
 export function applyTranslations(root = document) {
   root.querySelectorAll('[data-i18n]').forEach((el) => {
-    const key = el.getAttribute('data-i18n');
-    const val = t(key);
-    if (val != null) el.textContent = val;
-  });
+    const key = el.getAttribute('data-i18n')
+    const val = t(key)
+    if (val != null) el.textContent = val
+  })
   root.querySelectorAll('[data-i18n-ph]').forEach((el) => {
-    const key = el.getAttribute('data-i18n-ph');
-    const val = t(key);
-    if (val != null) el.setAttribute('placeholder', val);
-  });
+    const key = el.getAttribute('data-i18n-ph')
+    const val = t(key)
+    if (val != null) el.setAttribute('placeholder', val)
+  })
 }
 
 /**
@@ -74,11 +86,15 @@ export function applyTranslations(root = document) {
  * @returns {Promise<void>}
  */
 export async function initI18n() {
-  let lang = 'en';
-  try { lang = localStorage.getItem(STORAGE_KEY) || ''; } catch { /* ignore */ }
-  if (!SUPPORTED.includes(lang)) {
-    const nav = (navigator.language || 'en').slice(0, 2);
-    lang = SUPPORTED.includes(nav) ? nav : 'en';
+  let lang = 'en'
+  try {
+    lang = localStorage.getItem(STORAGE_KEY) || ''
+  } catch {
+    /* ignore */
   }
-  await setLanguage(lang);
+  if (!SUPPORTED.includes(lang)) {
+    const nav = (navigator.language || 'en').slice(0, 2)
+    lang = SUPPORTED.includes(nav) ? nav : 'en'
+  }
+  await setLanguage(lang)
 }

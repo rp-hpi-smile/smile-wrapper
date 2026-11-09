@@ -40,7 +40,7 @@ const items = [
 }
 
 .sidebar {
-  width: 250px;
+  width: 200px;
   background: #1e293b;
   color: #fff;
   transition: width 0.3s;
