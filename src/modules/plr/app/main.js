@@ -11,7 +11,7 @@ import { el, disclaimerBanner } from "./ui.js";
 import { WakeListener } from "./listen.js";
 import { APP_VERSION, SHEETS_WEBAPP_URL } from "./config.js";
 
-const app = document.getElementById("app");
+let app = null;
 
 const caps = detectCapabilities();
 
@@ -70,8 +70,8 @@ function screen(id) {
 }
 
 function show(id) {
-  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
-  document.getElementById(`screen-${id}`)?.classList.add("active");
+  (app ?? document).querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  (app ?? document).querySelector(`#screen-${id}`)?.classList.add("active");
 }
 
 // ================= INTRO SCREEN =================
@@ -723,7 +723,7 @@ function formatTimestamp(iso) {
 }
 
 function renderResults(result) {
-  const body = document.getElementById("results-body");
+  const body = (app ?? document).querySelector("#results-body");
   body.innerHTML = "";
 
   const ind = result.asymmetry.indicator;
@@ -923,19 +923,26 @@ function num(v, dp = 2) {
 }
 
 // ================= BOOT =================
-function boot() {
+/**
+ * Mount the PLR app into `container`.
+ * Called by PlrView.vue after the Vue component has mounted.
+ *
+ * @param {HTMLElement} container - The host element to render into.
+ */
+export function init(container) {
+  app = container;
   app.appendChild(buildIntro());
   app.appendChild(buildSettings());
   app.appendChild(buildCapture());
   app.appendChild(buildResults());
   show("intro");
+
+  window.addEventListener("resize", _onResize);
 }
 
-boot();
-
-window.addEventListener("resize", () => {
-  const active = document.querySelector("#screen-results.active");
+function _onResize() {
+  const active = app?.querySelector("#screen-results.active");
   if (!active) return;
   const canvas = active.querySelector("canvas.plot");
   if (canvas) drawPlot(canvas, eyeResults.left, eyeResults.right);
-});
+}
