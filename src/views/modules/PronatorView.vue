@@ -22,6 +22,7 @@ onMounted(async () => {
 #pronator-app {
   margin: -2rem;
   min-width: 1024px;
-  min-height: 100vh;
+  min-height: 100%;
+  overflow-y: auto;
 }
 </style>
