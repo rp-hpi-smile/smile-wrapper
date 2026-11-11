@@ -76,12 +76,7 @@ onUnmounted(() => {
 </script>
 
 <style>
-/*
- * Pull the speech shell out of the hub's 2rem content padding so it fills
- * the pane edge-to-edge — same technique as #smilefa-app in SmileFaView.
- */
 .speech-shell {
-  margin: -2rem;
   display: flex;
   flex-direction: column;
   min-width: 1024px;
@@ -91,5 +86,9 @@ onUnmounted(() => {
 .speech-shell .emergency {
   position: relative;
   z-index: 39;
+}
+
+.topbar-in {
+  margin-top: -2rem;
 }
 </style>
