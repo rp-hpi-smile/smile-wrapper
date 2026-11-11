@@ -4,8 +4,14 @@ import App from './App';
 import './index.css';
 import './styles/accessibility.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+/**
+ * Mount the pronator React app into `container`.
+ * Called by PronatorView.vue after the host element is in the DOM.
+ */
+export function init(container: HTMLElement) {
+  createRoot(container).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+}
