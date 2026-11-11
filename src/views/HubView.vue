@@ -36,7 +36,10 @@ const items = [
 <style scoped>
 .layout {
   display: flex;
-  min-height: 100vh;
+  flex-direction: row;
+  height: 100vh;
+  min-width: 1280px;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -101,6 +104,12 @@ const items = [
 .content {
   flex: 1;
   padding: 2rem;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+}
+
+.content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
 @media (max-width: 768px) {
