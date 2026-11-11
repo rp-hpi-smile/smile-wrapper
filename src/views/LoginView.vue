@@ -74,11 +74,19 @@ function handleSubmit() {
 </template>
 
 <style scoped>
+/* ── TRON / BlazePod theme ── */
 .login-layout {
   display: flex;
   flex-direction: row;
   height: 100vh;
   width: 100%;
+  background: #050810;
+  font-family: 'Exo 2', sans-serif;
+  /* faint cyan grid */
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 /* Equal-width panels */
@@ -91,7 +99,8 @@ function handleSubmit() {
   display: flex;
   align-items: stretch;
   padding: 1.5rem;
-  background: #111;
+  background: #0a0f1e;
+  border-right: 1px solid rgba(0, 229, 255, 0.18);
 }
 
 .panel-form {
@@ -99,20 +108,30 @@ function handleSubmit() {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: var(--color-background, #fff);
+  background: transparent;
 }
 
 /* Form card */
 .form-card {
   width: 100%;
   max-width: 360px;
+  background: #0d1526;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-top: 3px solid #ff6b00;
+  border-radius: 6px;
+  padding: 2rem;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .form-title {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   margin-bottom: 1.75rem;
-  color: var(--color-heading, #111);
+  color: #00e5ff;
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .field {
@@ -123,52 +142,65 @@ function handleSubmit() {
 }
 
 .field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text, #333);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a99;
 }
 
 .field input {
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--color-border, #ccc);
-  border-radius: 6px;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 4px;
+  font-family: 'Exo 2', sans-serif;
   font-size: 1rem;
-  background: var(--color-background-soft, #fafafa);
-  color: var(--color-text, #111);
-  outline-offset: 2px;
-  transition: border-color 0.15s;
+  background: #111d35;
+  color: #e8eaf0;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input::placeholder {
+  color: #6b7a99;
 }
 
 .field input:focus {
-  border-color: var(--color-primary, #4a90d9);
-  outline: 2px solid var(--color-primary, #4a90d9);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25);
 }
 
 .btn-submit {
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.75rem;
-  background: var(--color-primary, #4a90d9);
+  background: #ff6b00;
   color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: box-shadow 0.2s, opacity 0.15s;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.6), 0 0 30px rgba(255, 107, 0, 0.25);
 }
 
-.btn-submit:hover {
-  opacity: 0.88;
+.btn-submit:hover:not(:disabled) {
+  box-shadow: 0 0 18px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.35);
 }
 
 .btn-submit:focus-visible {
-  outline: 2px solid var(--color-primary, #4a90d9);
+  outline: 2px solid #ff6b00;
   outline-offset: 3px;
 }
 
 .btn-submit:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  box-shadow: none;
 }
 </style>

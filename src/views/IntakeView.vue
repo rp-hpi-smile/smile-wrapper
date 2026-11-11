@@ -168,12 +168,18 @@ function handleSave() {
 </template>
 
 <style scoped>
+/* ── TRON / BlazePod theme ── */
 .intake-layout {
   min-height: 100vh;
   padding: 2rem;
-  background: var(--color-background, #fff);
-  color: var(--color-text, #111);
-  font-family: inherit;
+  background: #050810;
+  color: #e8eaf0;
+  font-family: 'Exo 2', sans-serif;
+  /* faint cyan grid */
+  background-image:
+    linear-gradient(rgba(0, 229, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 229, 255, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 /* Header */
@@ -183,24 +189,27 @@ function handleSave() {
   gap: 1.5rem;
   padding-bottom: 1.25rem;
   margin-bottom: 2rem;
-  border-bottom: 1px solid var(--color-border, #e0e0e0);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.18);
 }
 
 .photo-placeholder {
   flex-shrink: 0;
   width: 80px;
   height: 80px;
-  border-radius: 6px;
-  background: var(--color-background-mute, #e8e8e8);
+  border-radius: 4px;
+  background: #111d35;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--color-border, #ccc);
+  border: 1px solid rgba(0, 229, 255, 0.18);
 }
 
 .photo-label {
-  font-size: 0.8rem;
-  color: var(--color-text-soft, #888);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a99;
   user-select: none;
 }
 
@@ -217,16 +226,21 @@ function handleSave() {
 }
 
 .info-label {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--color-text-soft, #888);
-  min-width: 100px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a99;
+  min-width: 110px;
 }
 
 .info-value {
+  font-family: 'Exo 2', sans-serif;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-heading, #111);
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 }
 
 /* Form grid */
@@ -250,19 +264,24 @@ function handleSave() {
 
 /* Fieldset / legend */
 .form-section {
-  border: 1px solid var(--color-border, #e0e0e0);
-  border-radius: 8px;
+  background: #0d1526;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-top: 3px solid #ff6b00;
+  border-radius: 6px;
   padding: 1.25rem 1.5rem;
   margin: 0;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .form-section legend {
   padding: 0 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-text-soft, #666);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 }
 
 /* Fields */
@@ -278,29 +297,52 @@ function handleSave() {
 }
 
 .field label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text, #333);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a99;
 }
 
 .field input,
 .field select {
   padding: 0.625rem 0.75rem;
-  border: 1px solid var(--color-border, #ccc);
-  border-radius: 6px;
+  border: 1px solid rgba(0, 229, 255, 0.18);
+  border-radius: 4px;
+  font-family: 'Exo 2', sans-serif;
   font-size: 1rem;
-  background: var(--color-background-soft, #fafafa);
-  color: var(--color-text, #111);
-  outline-offset: 2px;
-  transition: border-color 0.15s;
+  background: #111d35;
+  color: #e8eaf0;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
 
+.field input::placeholder {
+  color: #6b7a99;
+}
+
 .field input:focus,
 .field select:focus {
-  border-color: var(--color-primary, #4a90d9);
-  outline: 2px solid var(--color-primary, #4a90d9);
+  border-color: rgba(0, 229, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25);
+}
+
+/* Select arrow retint */
+.field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2300e5ff'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+/* Select options */
+.field select option {
+  background: #111d35;
+  color: #e8eaf0;
 }
 
 /* Input with unit */
@@ -315,8 +357,11 @@ function handleSave() {
 }
 
 .unit {
-  font-size: 0.875rem;
-  color: var(--color-text-soft, #888);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7a99;
   white-space: nowrap;
 }
 
@@ -327,28 +372,33 @@ function handleSave() {
 }
 
 .btn-save {
-  padding: 0.75rem 2rem;
-  background: var(--color-primary, #4a90d9);
+  padding: 0.75rem 2.5rem;
+  background: #ff6b00;
   color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: box-shadow 0.2s, opacity 0.15s;
+  box-shadow: 0 0 12px rgba(255, 107, 0, 0.6), 0 0 30px rgba(255, 107, 0, 0.25);
 }
 
-.btn-save:hover {
-  opacity: 0.88;
+.btn-save:hover:not(:disabled) {
+  box-shadow: 0 0 18px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.35);
 }
 
 .btn-save:focus-visible {
-  outline: 2px solid var(--color-primary, #4a90d9);
+  outline: 2px solid #ff6b00;
   outline-offset: 3px;
 }
 
 .btn-save:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  box-shadow: none;
 }
 </style>

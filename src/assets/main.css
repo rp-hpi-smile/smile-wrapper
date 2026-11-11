@@ -7,6 +7,17 @@
   font-weight: normal;
 }
 
+/* Full-screen views must break out of the constrained #app box */
+#app:has(.login-layout),
+#app:has(.intake-layout),
+#app:has(.layout) {
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
 a,
 .green {
   text-decoration: none;
@@ -31,5 +42,13 @@ a,
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 0 2rem;
+  }
+
+  /* Full-screen views: undo body centering and app grid */
+  body:has(.login-layout),
+  body:has(.intake-layout),
+  body:has(.layout) {
+    display: block;
+    place-items: unset;
   }
 }
