@@ -366,12 +366,12 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => {
-  // Clean up the global wrapper callback to avoid stale references.
-  if (window.__smileWrapper) {
-    delete window.__smileWrapper.onSmileFaComplete
-  }
-})
+// onUnmounted(() => {
+//   // Clean up the global wrapper callback to avoid stale references.
+//   if (window.__smileWrapper) {
+//     delete window.__smileWrapper.onSmileFaComplete
+//   }
+// })
 </script>
 
 <style>

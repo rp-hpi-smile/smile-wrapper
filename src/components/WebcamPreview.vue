@@ -51,7 +51,7 @@ function startDetectionLoop() {
 async function handlePlay() {
   try {
     const vision = await FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm',
+      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm',
     )
     faceDetector = await FaceDetector.createFromOptions(vision, {
       baseOptions: {
@@ -60,6 +60,7 @@ async function handlePlay() {
         delegate: 'GPU',
       },
       runningMode: 'VIDEO',
+      minDetectionConfidence: 0.5,
     })
     startDetectionLoop()
   } catch (err) {
