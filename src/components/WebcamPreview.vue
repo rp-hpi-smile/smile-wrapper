@@ -91,6 +91,7 @@ onBeforeUnmount(() => {
   }
   if (stream) {
     stream.getTracks().forEach((track) => track.stop())
+    videoEl.value.srcObject = null
   }
   if (canvasEl.value) {
     const canvas = canvasEl.value
