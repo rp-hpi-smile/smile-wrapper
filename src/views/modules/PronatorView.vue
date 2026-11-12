@@ -18,11 +18,35 @@ onMounted(async () => {
 /*
  * Pull the pronator app edge-to-edge inside the hub content pane,
  * matching the approach used by PlrView and SmileFaView.
+ *
+ * The inner React app uses min-height: 100vh on several elements which
+ * blows out the scroll container when embedded. We neutralise those here
+ * and let the Hub's .content pane own the scroll.
  */
 #pronator-app {
   margin: -2rem;
   min-width: 1024px;
-  min-height: 100%;
-  overflow-y: auto;
+}
+
+/* React root: fill the wrapper, don't expand to 100vh */
+#pronator-app #root {
+  min-height: unset;
+  align-items: flex-start;
+}
+
+/* App shell: allow content to grow naturally, not clip with overflow:hidden */
+#pronator-app .app {
+  min-height: unset;
+  overflow: visible;
+}
+
+/* Portrait container: remove the 100vh lock */
+#pronator-app .app__portrait-container {
+  min-height: unset;
+}
+
+/* Compatibility gate: same fix */
+#pronator-app .compatibility-gate {
+  min-height: unset;
 }
 </style>

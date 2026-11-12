@@ -70,15 +70,17 @@ const items = [
 }
 
 .nav-list li + li::before {
-  content: "";
+  content: '';
   display: block;
   width: 16px;
   height: 24px;
   margin: 8px 16px;
   pointer-events: none;
   background: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24'%3E%3Cpath d='M8 0v20M2 16l6 6 6-6' stroke='currentColor' stroke-width='2' fill='none'/%3E%3C/svg%3E") center / contain no-repeat;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24'%3E%3Cpath d='M8 0v20M2 16l6 6 6-6' stroke='currentColor' stroke-width='2' fill='none'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24'%3E%3Cpath d='M8 0v20M2 16l6 6 6-6' stroke='currentColor' stroke-width='2' fill='none'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 24'%3E%3Cpath d='M8 0v20M2 16l6 6 6-6' stroke='currentColor' stroke-width='2' fill='none'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 }
 
 .nav-link {
@@ -103,6 +105,7 @@ const items = [
 
 .content {
   flex: 1;
+  min-height: 0; /* Allow flex child to shrink so overflow-y: auto can scroll */
   padding: 2rem;
   overflow-y: auto;
   scrollbar-width: none; /* Firefox */
