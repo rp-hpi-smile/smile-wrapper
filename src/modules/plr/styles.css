@@ -31,9 +31,8 @@
   --notready: #ffcc00;
   --grid: rgba(0, 229, 255, 0.07);
 
-  --font-display: "Orbitron", monospace;
-  --font-body: "Exo 2", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
-    Arial, sans-serif;
+  --font-display: 'Orbitron', monospace;
+  --font-body: 'Exo 2', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --btn-text: #050810;
   color-scheme: dark;
 }
@@ -56,7 +55,7 @@ body {
 
 /* Tron grid background — decorative, fixed behind everything */
 body::before {
-  content: "";
+  content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -193,7 +192,10 @@ p {
   width: 100%;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform 0.12s, box-shadow 0.12s, opacity 0.12s;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s,
+    opacity 0.12s;
 }
 .btn:active {
   transform: scale(0.97);
@@ -205,7 +207,9 @@ p {
   box-shadow: var(--glow-orange);
 }
 .btn.primary:not(:disabled):hover {
-  box-shadow: 0 0 20px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.35);
+  box-shadow:
+    0 0 20px rgba(255, 107, 0, 0.8),
+    0 0 40px rgba(255, 107, 0, 0.35);
 }
 .btn.secondary {
   background: transparent;
@@ -516,11 +520,11 @@ thead th {
   font-size: 11px;
   color: var(--muted);
 }
-input[type="range"] {
+input[type='range'] {
   width: 140px;
 }
-input[type="number"],
-input[type="text"],
+input[type='number'],
+input[type='text'],
 select {
   background: var(--panel);
   border: 1px solid rgba(0, 229, 255, 0.25);
@@ -529,10 +533,12 @@ select {
   border-radius: 6px;
   padding: 8px;
   font-size: 15px;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-input[type="number"]:focus,
-input[type="text"]:focus,
+input[type='number']:focus,
+input[type='text']:focus,
 select:focus {
   outline: none;
   border-color: var(--accent-2);
@@ -542,14 +548,14 @@ select option {
   background: var(--panel);
   color: var(--text);
 }
-input[type="number"] {
+input[type='number'] {
   width: 72px;
   text-align: right;
 }
-input[type="text"] {
+input[type='text'] {
   width: 180px;
 }
-input[type="range"] {
+input[type='range'] {
   accent-color: var(--accent-2);
 }
 

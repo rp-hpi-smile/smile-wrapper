@@ -424,5 +424,38 @@ onMounted(async () => {
 #smilefa-app {
   margin: -2rem;
   min-width: 1024px;
+  /* Undo Pronator's global `.app` flex/overflow rules if that view was visited. */
+  display: block;
+  align-items: normal;
+  overflow: visible;
+}
+
+/* Pronator's `.app::before` draws a fixed grid overlay; not wanted here. */
+#smilefa-app::before {
+  content: none;
+}
+
+/*
+ * Vite keeps every visited view's CSS loaded, and PLR defines a global
+ * `.screen { display: none }` (shown only with `.active`). It has the same
+ * specificity as smilefa's `.screen`, so whichever stylesheet loaded last won
+ * and SmileFa's screens could vanish. The ID prefix makes these always win.
+ */
+#smilefa-app .screen {
+  display: grid;
+}
+#smilefa-app .screen--result,
+#smilefa-app .screen--full {
+  display: flex;
+}
+#smilefa-app .screen[hidden] {
+  display: none;
+}
+
+/* Portrait / small-screen guard (mirrors the rule in smilefa's app.css). */
+@media (orientation: portrait), (max-width: 1023px) {
+  #smilefa-app {
+    display: none;
+  }
 }
 </style>
