@@ -13,9 +13,18 @@ const form = reactive({
   session_id: '',
 })
 
+/** Local time as YYYY-MM-DDTHH:mm:ss (no timezone suffix). */
+function localTimestamp(d = new Date()) {
+  const p = (n) => String(n).padStart(2, '0')
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}` +
+    `T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+  )
+}
+
 function handleFaceDetected() {
   if (form.participant_id === '' && form.session_id === '') {
-    form.participant_id = 'P-' + String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')
+    form.participant_id = 'P-' + localTimestamp()
     form.session_id = md5(form.participant_id + ':' + Date.now())
     sessionStore.setSession(form.participant_id, form.session_id)
   }
@@ -50,7 +59,7 @@ function handleSubmit() {
               type="text"
               autocomplete="off"
               required
-              placeholder="e.g. P-001"
+              placeholder="e.g. P-2026-01-31T14:05:09"
             />
           </div>
 
@@ -120,7 +129,9 @@ function handleSubmit() {
   border-top: 3px solid #ff6b00;
   border-radius: 6px;
   padding: 2rem;
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.5),
+    0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .form-title {
@@ -131,7 +142,9 @@ function handleSubmit() {
   text-transform: uppercase;
   margin-bottom: 1.75rem;
   color: #00e5ff;
-  text-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
+  text-shadow:
+    0 0 12px rgba(0, 229, 255, 0.5),
+    0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .field {
@@ -159,7 +172,9 @@ function handleSubmit() {
   background: #111d35;
   color: #e8eaf0;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .field input::placeholder {
@@ -185,12 +200,18 @@ function handleSubmit() {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: box-shadow 0.2s, opacity 0.15s;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.6), 0 0 30px rgba(255, 107, 0, 0.25);
+  transition:
+    box-shadow 0.2s,
+    opacity 0.15s;
+  box-shadow:
+    0 0 12px rgba(255, 107, 0, 0.6),
+    0 0 30px rgba(255, 107, 0, 0.25);
 }
 
 .btn-submit:hover:not(:disabled) {
-  box-shadow: 0 0 18px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.35);
+  box-shadow:
+    0 0 18px rgba(255, 107, 0, 0.8),
+    0 0 40px rgba(255, 107, 0, 0.35);
 }
 
 .btn-submit:focus-visible {
