@@ -3,13 +3,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import '@/modules/plr/styles.css'
+import { ref, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+// Loaded as text and attached only while this view is mounted, so PLR's global
+// rules (html/body, body::before grid, video, h1/p, inputs) don't leak.
+import plrCss from '@/modules/plr/styles.css?inline'
+import { attachViewStyles } from '@/utils/viewStyles.js'
 import { useCameraGuard } from '@/composables/useCameraGuard'
 import { useSessionStore } from '@/stores/session.js'
 import { ageFromDob, toPlrGender } from '@/utils/participant.js'
 // Stops the rear camera (and torch) if the module left a stream running.
 useCameraGuard()
+
+// Attach during setup so the styles are present for the first render.
+const detachStyles = attachViewStyles([plrCss], 'plr')
+onUnmounted(detachStyles)
 
 const mount = ref(null)
 const sessionStore = useSessionStore()

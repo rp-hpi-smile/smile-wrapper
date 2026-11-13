@@ -342,7 +342,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import '@/modules/smilefa/css/app.css'
+// Loaded as text and attached only while this view is mounted, so SmileFa's
+// global rules (html/body, headings, buttons, inputs) don't leak.
+import smileFaCss from '@/modules/smilefa/css/app.css?inline'
+import { attachViewStyles } from '@/utils/viewStyles.js'
 import { useCameraGuard } from '@/composables/useCameraGuard'
 import { useSessionStore } from '@/stores/session.js'
 import { toSmileFaGender, yearOfBirthFromDob } from '@/utils/participant.js'
@@ -351,6 +354,10 @@ const mount = ref(null)
 const sessionStore = useSessionStore()
 // Stops the camera if the module left a stream running.
 useCameraGuard()
+
+// Attach during setup so the styles are present for the first render.
+const detachStyles = attachViewStyles([smileFaCss], 'smilefa')
+onUnmounted(detachStyles)
 
 /**
  * Pre-fill the S1 participant inputs from the session store and fire the events

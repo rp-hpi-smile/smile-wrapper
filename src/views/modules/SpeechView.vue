@@ -57,9 +57,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useCameraGuard } from '@/composables/useCameraGuard'
-import '@/modules/speech/src/styles/tokens.css'
-import '@/modules/speech/src/styles/app.css'
-import '@/modules/speech/src/styles/routes.css'
+// Loaded as text and attached only while this view is mounted. A plain import
+// leaks Speech's global rules (notably `canvas { background }`, which made the
+// camera overlay canvases in later views opaque and hid the video).
+import tokensCss from '@/modules/speech/src/styles/tokens.css?inline'
+import appCss from '@/modules/speech/src/styles/app.css?inline'
+import routesCss from '@/modules/speech/src/styles/routes.css?inline'
+import { attachViewStyles } from '@/utils/viewStyles.js'
 import { mountSpeech, destroySpeech, navigate } from '@/modules/speech/src/app/library.js'
 import { setParticipant } from '@/modules/speech/src/app/state.js'
 import { useSessionStore } from '@/stores/session.js'
@@ -68,6 +72,10 @@ import { ageFromDob, toSpeechSex } from '@/utils/participant.js'
 // Releases every capture stream this view opened (here: the mic), including
 // one that resolves after navigating away mid-permission-prompt.
 useCameraGuard()
+
+// Attach during setup so the styles are present for the first render.
+const detachStyles = attachViewStyles([tokensCss, appCss, routesCss], 'speech')
+onUnmounted(detachStyles)
 
 const mainRef = ref(null)
 const liveRef = ref(null)
@@ -107,7 +115,8 @@ onUnmounted(() => {
   z-index: 39;
 }
 
-.topbar-in {
+/* Prefixed so it still beats app.css, which is attached after this block. */
+.speech-shell .topbar-in {
   margin-top: -2rem;
 }
 </style>
