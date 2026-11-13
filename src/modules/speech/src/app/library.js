@@ -12,70 +12,76 @@
      destroySpeech()
    ========================================================================== */
 
-import { state } from './state.js';
-import {
-  register,
-  setNavigate, clearNavigate,
-  announce,
-} from './router.js';
+import { state } from './state.js'
+import { stopMic } from './capture.js'
+import { stopASR } from './media.js'
+import { register, setNavigate, clearNavigate, announce } from './router.js'
 
-import * as session from '../routes/session.js';
-import * as record  from '../routes/record.js';
-import * as results from '../routes/results.js';
-import * as method  from '../routes/method.js';
+import * as session from '../routes/session.js'
+import * as record from '../routes/record.js'
+import * as results from '../routes/results.js'
+import * as method from '../routes/method.js'
 
 // Internal state — reset on each mount so re-navigation always starts fresh.
-let _mountEl  = null;
-let _liveEl   = null;
-let _current  = null;   // { name, mod }
+let _mountEl = null
+let _liveEl = null
+let _current = null // { name, mod }
 
 // --------------------------------------------------------------------------
 // Core render — identical logic to router.js handle() but driven by name
 // directly, never by location.hash.
 // --------------------------------------------------------------------------
 async function renderRoute(name) {
-  const routes = { session, record, results, method };
-  if (!routes[name]) name = 'session';
+  const routes = { session, record, results, method }
+  if (!routes[name]) name = 'session'
 
   if (_current?.mod?.teardown) {
-    try { _current.mod.teardown(); } catch (e) { console.error(e); }
+    try {
+      _current.mod.teardown()
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-  const mod = routes[name];
-  _mountEl.innerHTML = '';
+  const mod = routes[name]
+  _mountEl.innerHTML = ''
 
-  const page = document.createElement('div');
-  page.className = 'page';
-  page.setAttribute('role', 'region');
-  page.setAttribute('aria-label', mod.title || name);
-  _mountEl.appendChild(page);
+  const page = document.createElement('div')
+  page.className = 'page'
+  page.setAttribute('role', 'region')
+  page.setAttribute('aria-label', mod.title || name)
+  _mountEl.appendChild(page)
 
   try {
-    await mod.render(page);
+    await mod.render(page)
   } catch (e) {
-    console.error(e);
+    console.error(e)
     page.innerHTML =
       '<div class="panel"><div class="ptitle">Error</div><p>' +
-      'Something went wrong rendering this screen. Check the console.</p></div>';
+      'Something went wrong rendering this screen. Check the console.</p></div>'
   }
 
-  _current = { name, mod };
-  document.title = 'SMILE Speech Signal Lab \u2014 ' + (mod.title || name);
+  _current = { name, mod }
+  document.title = 'SMILE Speech Signal Lab \u2014 ' + (mod.title || name)
 
   // Update nav aria-current within the speech shell only.
-  _mountEl.closest('.speech-shell')
+  _mountEl
+    .closest('.speech-shell')
     ?.querySelectorAll('nav.routes a[data-route]')
-    .forEach(a => {
+    .forEach((a) => {
       a.dataset.route === name
         ? a.setAttribute('aria-current', 'page')
-        : a.removeAttribute('aria-current');
-    });
+        : a.removeAttribute('aria-current')
+    })
 
   // Focus the page heading for keyboard / SR users.
-  const h = page.querySelector('h1, [tabindex="-1"]');
-  if (h) { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: false }); }
+  const h = page.querySelector('h1, [tabindex="-1"]')
+  if (h) {
+    h.setAttribute('tabindex', '-1')
+    h.focus({ preventScroll: false })
+  }
 
-  announce((mod.title || name) + ' screen');
+  announce((mod.title || name) + ' screen')
 }
 
 // --------------------------------------------------------------------------
@@ -90,40 +96,39 @@ async function renderRoute(name) {
  * @returns {{ navigate(name: string): Promise<void> }}
  */
 export async function mountSpeech(mainEl, liveEl) {
-  _mountEl = mainEl;
-  _liveEl  = liveEl;
-  _current = null;
+  _mountEl = mainEl
+  _liveEl = liveEl
+  _current = null
 
   // Runtime context detection — mirrors main.js
-  state.secureContext = window.isSecureContext;
-  state.fileMode = location.protocol === 'file:';
+  state.secureContext = window.isSecureContext
+  state.fileMode = location.protocol === 'file:'
   if (
     state.fileMode ||
     !state.secureContext ||
     !navigator.mediaDevices ||
     !navigator.mediaDevices.getUserMedia
   ) {
-    state.fileMode =
-      state.fileMode || !state.secureContext || !navigator.mediaDevices;
+    state.fileMode = state.fileMode || !state.secureContext || !navigator.mediaDevices
   }
 
   // Register all routes.
-  register('session', session);
-  register('record',  record);
-  register('results', results);
-  register('method',  method);
+  register('session', session)
+  register('record', record)
+  register('results', results)
+  register('method', method)
 
   // Override go() in router.js so route modules (session, record, …) that
   // call go('record') drive renderRoute() instead of writing location.hash.
-  setNavigate(navigate);
+  setNavigate(navigate)
 
   // Unload warning — safe to add multiple times; browsers deduplicate.
-  window.addEventListener('beforeunload', beforeUnload);
+  window.addEventListener('beforeunload', beforeUnload)
 
   // Render the initial route.
-  await renderRoute('session');
+  await renderRoute('session')
 
-  return { navigate };
+  return { navigate }
 }
 
 /**
@@ -131,8 +136,8 @@ export async function mountSpeech(mainEl, liveEl) {
  * @param {string} name  session | record | results | method
  */
 export async function navigate(name) {
-  if (!_mountEl) return;
-  await renderRoute(name);
+  if (!_mountEl) return
+  await renderRoute(name)
 }
 
 /**
@@ -141,20 +146,40 @@ export async function navigate(name) {
  */
 export function destroySpeech() {
   if (_current?.mod?.teardown) {
-    try { _current.mod.teardown(); } catch (e) { console.error(e); }
+    try {
+      _current.mod.teardown()
+    } catch (e) {
+      console.error(e)
+    }
   }
-  _current  = null;
-  _mountEl  = null;
-  _liveEl   = null;
-  clearNavigate();
-  window.removeEventListener('beforeunload', beforeUnload);
+  // Routes deliberately keep the mic live across internal navigation
+  // (record ⇄ results), so nothing else releases it. Leaving the module must,
+  // otherwise the raw mic capture + AudioContext stay live behind later views
+  // (suspected cause of camera failures on Android tablets after Speech).
+  try {
+    stopASR()
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    stopMic()
+  } catch (e) {
+    console.error(e)
+  }
+  try {
+    if (window.speechSynthesis) window.speechSynthesis.cancel()
+  } catch {}
+  _current = null
+  _mountEl = null
+  _liveEl = null
+  clearNavigate()
+  window.removeEventListener('beforeunload', beforeUnload)
 }
 
 function beforeUnload(e) {
   if (!state.exported && Object.keys(state.audio).length) {
-    e.preventDefault();
-    e.returnValue =
-      'Recordings have not been exported. They exist only in memory and will be lost.';
-    return e.returnValue;
+    e.preventDefault()
+    e.returnValue = 'Recordings have not been exported. They exist only in memory and will be lost.'
+    return e.returnValue
   }
 }

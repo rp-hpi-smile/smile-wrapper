@@ -56,6 +56,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useCameraGuard } from '@/composables/useCameraGuard'
 import '@/modules/speech/src/styles/tokens.css'
 import '@/modules/speech/src/styles/app.css'
 import '@/modules/speech/src/styles/routes.css'
@@ -63,6 +64,10 @@ import { mountSpeech, destroySpeech, navigate } from '@/modules/speech/src/app/l
 import { setParticipant } from '@/modules/speech/src/app/state.js'
 import { useSessionStore } from '@/stores/session.js'
 import { ageFromDob, toSpeechSex } from '@/utils/participant.js'
+
+// Releases every capture stream this view opened (here: the mic), including
+// one that resolves after navigating away mid-permission-prompt.
+useCameraGuard()
 
 const mainRef = ref(null)
 const liveRef = ref(null)
