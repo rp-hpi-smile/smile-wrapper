@@ -388,6 +388,7 @@ onMounted(async () => {
   const { init } = await import('@/modules/smilefa/js/app.js')
 
   await init(mount.value, {
+    sessionId: sessionStore.session_id,
     onComplete: (result) => {
       // TODO (Task 4): write result to Pinia and navigate to hub
       // sessionStore.results.smilefa = result

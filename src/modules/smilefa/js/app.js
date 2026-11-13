@@ -75,6 +75,9 @@ async function boot() {
  * @param {{ onComplete?: (result: object) => void }} [options]
  */
 export async function init(mountElement, options = {}) {
+  // Wrapper session id; used as the stored session id instead of a generated UUID.
+  if (options.sessionId) state.meta.sessionId = options.sessionId
+
   // Register the completion callback before boot so wireResultActions picks it up.
   if (typeof options.onComplete === 'function') {
     window.__smileWrapper = { ...window.__smileWrapper, onSmileFaComplete: options.onComplete }
@@ -205,6 +208,7 @@ async function finishTest(buffers) {
 
 function buildMeta() {
   return {
+    sessionId: state.meta.sessionId || null,
     mode: state.mode,
     lang: getLang(),
     m10: state.meta.m10,
