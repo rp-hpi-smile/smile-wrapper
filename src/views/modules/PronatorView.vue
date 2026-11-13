@@ -4,7 +4,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useCameraGuard } from '@/composables/useCameraGuard'
 import { useSessionStore } from '@/stores/session.js'
 import { ageFromDob, toPronatorGender } from '@/utils/participant.js'
@@ -14,15 +14,28 @@ useCameraGuard()
 const mount = ref(null)
 const sessionStore = useSessionStore()
 
+let unmountApp = null
+let disposed = false
+
 onMounted(async () => {
   const { init } = await import('@/modules/pronator/src/main.tsx')
+  // User may have navigated away while the module was loading.
+  if (disposed || !mount.value) return
   // Pre-fill the participant form from the intake saved in the session store.
   // Undefined values are left blank for the participant to complete.
-  init(mount.value, {
+  unmountApp = init(mount.value, {
     name: sessionStore.full_name || undefined,
     gender: toPronatorGender(sessionStore.sex),
     age: ageFromDob(sessionStore.dob),
   })
+})
+
+// Unmount the React root so its cleanups release the camera and CV worker.
+// Without this the old app stays alive (and may keep holding the camera).
+onBeforeUnmount(() => {
+  disposed = true
+  unmountApp?.()
+  unmountApp = null
 })
 </script>
 

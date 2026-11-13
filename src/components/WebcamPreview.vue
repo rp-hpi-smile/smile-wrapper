@@ -11,6 +11,7 @@ let stream = null
 let faceDetector = null
 let rafId = null
 let hasEmitted = false
+let unmounted = false
 
 function startDetectionLoop() {
   function loop() {
@@ -70,7 +71,14 @@ async function handlePlay() {
 
 onMounted(async () => {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    const acquired = await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    // Unmounted while the permission prompt / device open was pending:
+    // release right away so the camera isn't left busy for the next view.
+    if (unmounted) {
+      acquired.getTracks().forEach((track) => track.stop())
+      return
+    }
+    stream = acquired
     if (videoEl.value) {
       videoEl.value.srcObject = stream
       videoEl.value.addEventListener('play', handlePlay, { once: true })
@@ -81,6 +89,7 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => {
+  unmounted = true
   if (rafId !== null) {
     cancelAnimationFrame(rafId)
     rafId = null
@@ -91,7 +100,8 @@ onBeforeUnmount(() => {
   }
   if (stream) {
     stream.getTracks().forEach((track) => track.stop())
-    videoEl.value.srcObject = null
+    stream = null
+    if (videoEl.value) videoEl.value.srcObject = null
   }
   if (canvasEl.value) {
     const canvas = canvasEl.value

@@ -12,9 +12,12 @@ import './styles/accessibility.css'
  * @param initialParticipant Optional values used to pre-fill the participant form.
  */
 export function init(container: HTMLElement, initialParticipant?: ParticipantPrefill) {
-  createRoot(container).render(
+  const root = createRoot(container)
+  root.render(
     <StrictMode>
       <App initialParticipant={initialParticipant} />
     </StrictMode>,
   )
+  // Lets the host unmount the app so effect cleanups (camera release) run.
+  return () => root.unmount()
 }
