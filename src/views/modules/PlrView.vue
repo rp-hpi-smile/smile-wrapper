@@ -5,6 +5,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import '@/modules/plr/styles.css'
+import { useCameraGuard } from '@/composables/useCameraGuard'
+// Stops the rear camera (and torch) if the module left a stream running.
+useCameraGuard()
 
 const mount = ref(null)
 

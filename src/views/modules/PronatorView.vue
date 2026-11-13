@@ -5,6 +5,9 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useCameraGuard } from '@/composables/useCameraGuard'
+// Stops the camera if the React app left a stream running.
+useCameraGuard()
 
 const mount = ref(null)
 

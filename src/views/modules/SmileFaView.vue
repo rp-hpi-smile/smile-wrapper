@@ -343,8 +343,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import '@/modules/smilefa/css/app.css'
+import { useCameraGuard } from '@/composables/useCameraGuard'
 
 const mount = ref(null)
+// Stops the camera if the module left a stream running.
+useCameraGuard()
 
 onMounted(async () => {
   // setParticipant could be called here with data from the Pinia session store,
