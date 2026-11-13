@@ -1,26 +1,31 @@
-import { useMemo, useEffect, useRef, useState, useCallback } from 'react';
-import { useAssessmentStateMachine } from './state/AssessmentStateMachine';
-import type { AppState, ParticipantInfo, PronatorDriftAssessment } from './types/index';
-import { exportToSheets } from './integrations/sheetsExport';
-import { WelcomeScreen } from './screens/WelcomeScreen';
-import { ParticipantInfoScreen } from './screens/ParticipantInfoScreen';
-import { SafetyConfirmationScreen } from './screens/SafetyConfirmationScreen';
-import { CameraSetupScreen } from './screens/CameraSetupScreen';
-import { InstructionScreen } from './screens/InstructionScreen';
-import { PositionValidationScreen } from './screens/PositionValidationScreen';
-import { CalibrationScreen } from './screens/CalibrationScreen';
-import { AssessmentScreen } from './screens/AssessmentScreen';
-import { ResultsScreen } from './screens/ResultsScreen';
-import { CompletionScreen } from './screens/CompletionScreen';
-import { FailureScreen } from './screens/FailureScreen';
-import { buildAssessment } from './analysis/buildAssessment';
-import { buildAssessmentFromAnalysis } from './analysis/buildAssessmentFromAnalysis';
-import type { RecordingResult } from './analysis/RecordingManager';
-import { getConfigStore } from './config/ConfigStore';
-import { createSpeechSystem } from './audio/SpeechSystem';
-import { BrowserCompatibilityGate } from './components/BrowserCompatibilityGate';
-import { AssessmentSessionProvider, useAssessmentSession } from './session/AssessmentSessionContext';
-import './App.css';
+import { useMemo, useEffect, useRef, useState, useCallback } from 'react'
+import { useAssessmentStateMachine } from './state/AssessmentStateMachine'
+import type {
+  AppState,
+  ParticipantInfo,
+  ParticipantPrefill,
+  PronatorDriftAssessment,
+} from './types/index'
+import { exportToSheets } from './integrations/sheetsExport'
+import { WelcomeScreen } from './screens/WelcomeScreen'
+import { ParticipantInfoScreen } from './screens/ParticipantInfoScreen'
+import { SafetyConfirmationScreen } from './screens/SafetyConfirmationScreen'
+import { CameraSetupScreen } from './screens/CameraSetupScreen'
+import { InstructionScreen } from './screens/InstructionScreen'
+import { PositionValidationScreen } from './screens/PositionValidationScreen'
+import { CalibrationScreen } from './screens/CalibrationScreen'
+import { AssessmentScreen } from './screens/AssessmentScreen'
+import { ResultsScreen } from './screens/ResultsScreen'
+import { CompletionScreen } from './screens/CompletionScreen'
+import { FailureScreen } from './screens/FailureScreen'
+import { buildAssessment } from './analysis/buildAssessment'
+import { buildAssessmentFromAnalysis } from './analysis/buildAssessmentFromAnalysis'
+import type { RecordingResult } from './analysis/RecordingManager'
+import { getConfigStore } from './config/ConfigStore'
+import { createSpeechSystem } from './audio/SpeechSystem'
+import { BrowserCompatibilityGate } from './components/BrowserCompatibilityGate'
+import { AssessmentSessionProvider, useAssessmentSession } from './session/AssessmentSessionContext'
+import './App.css'
 
 /**
  * Returns a human-readable screen label for a given app state.
@@ -28,33 +33,33 @@ import './App.css';
 function getScreenLabel(state: AppState): string {
   switch (state.screen) {
     case 'welcome':
-      return 'Welcome Screen';
+      return 'Welcome Screen'
     case 'howItWorks':
-      return 'How It Works';
+      return 'How It Works'
     case 'participantInfo':
-      return 'Participant Information Screen';
+      return 'Participant Information Screen'
     case 'safetyConfirmation':
-      return 'Safety Confirmation Screen';
+      return 'Safety Confirmation Screen'
     case 'cameraSetup':
-      return 'Camera Setup Screen';
+      return 'Camera Setup Screen'
     case 'instruction':
-      return 'Instruction Screen';
+      return 'Instruction Screen'
     case 'positionValidation':
-      return 'Position Validation Screen';
+      return 'Position Validation Screen'
     case 'calibration':
-      return 'Calibration Screen';
+      return 'Calibration Screen'
     case 'assessmentStart':
-      return 'Assessment Starting';
+      return 'Assessment Starting'
     case 'assessment':
-      return 'Assessment Screen';
+      return 'Assessment Screen'
     case 'completion':
-      return 'Completion Screen';
+      return 'Completion Screen'
     case 'failure':
-      return 'Failure Screen';
+      return 'Failure Screen'
     case 'results':
-      return 'Results Screen';
+      return 'Results Screen'
     default:
-      return 'Unknown Screen';
+      return 'Unknown Screen'
   }
 }
 
@@ -64,49 +69,49 @@ function getScreenLabel(state: AppState): string {
 function getScreenDescription(state: AppState): string {
   switch (state.screen) {
     case 'welcome':
-      return 'Begin your pronator drift screening assessment';
+      return 'Begin your pronator drift screening assessment'
     case 'howItWorks':
-      return 'Learn how the assessment works';
+      return 'Learn how the assessment works'
     case 'participantInfo':
-      return 'Enter your details before starting';
+      return 'Enter your details before starting'
     case 'safetyConfirmation':
-      return 'Please confirm safety requirements before proceeding';
+      return 'Please confirm safety requirements before proceeding'
     case 'cameraSetup':
-      return 'Setting up your camera for the assessment';
+      return 'Setting up your camera for the assessment'
     case 'instruction':
-      return 'Follow the instructions to position yourself correctly';
+      return 'Follow the instructions to position yourself correctly'
     case 'positionValidation':
-      return 'Validating your position...';
+      return 'Validating your position...'
     case 'calibration':
-      return 'Calibrating baseline measurements...';
+      return 'Calibrating baseline measurements...'
     case 'assessmentStart':
-      return 'Preparing to begin the 30-second assessment';
+      return 'Preparing to begin the 30-second assessment'
     case 'assessment':
-      return `Assessment in progress — ${state.timeRemaining}s remaining`;
+      return `Assessment in progress — ${state.timeRemaining}s remaining`
     case 'completion':
-      return 'Assessment complete — processing results';
+      return 'Assessment complete — processing results'
     case 'failure':
-      return `Assessment interrupted: ${state.reason}`;
+      return `Assessment interrupted: ${state.reason}`
     case 'results':
-      return 'View your assessment results';
+      return 'View your assessment results'
     default:
-      return '';
+      return ''
   }
 }
 
-function AppInner() {
-  const [state, dispatch] = useAssessmentStateMachine();
+function AppInner({ initialParticipant }: { initialParticipant?: ParticipantPrefill }) {
+  const [state, dispatch] = useAssessmentStateMachine()
   const speechSystem = useMemo(() => {
     try {
-      return createSpeechSystem();
+      return createSpeechSystem()
     } catch {
-      return null;
+      return null
     }
-  }, []);
-  const previousScreenRef = useRef<string>(state.screen);
-  const mainContentRef = useRef<HTMLElement>(null);
+  }, [])
+  const previousScreenRef = useRef<string>(state.screen)
+  const mainContentRef = useRef<HTMLElement>(null)
   // Timestamp when the timed assessment began, used to build the result.
-  const assessmentStartRef = useRef<number>(Date.now());
+  const assessmentStartRef = useRef<number>(Date.now())
 
   // ─── Analysis + recording wiring (shared AssessmentSession) ────────────────
   //
@@ -114,45 +119,45 @@ function AppInner() {
   // analysis pipeline. The camera-setup, calibration, and assessment screens all
   // operate on this ONE pipeline, so a completed assessment produces a real,
   // populated result (drift/tremor/pronation/etc.) rather than a placeholder.
-  const session = useAssessmentSession();
-  const config = useMemo(() => getConfigStore(), []);
+  const session = useAssessmentSession()
+  const config = useMemo(() => getConfigStore(), [])
 
   // On-device recording consent (Req 11.2). Defaults to false; the user opts in
   // via the consent toggle on the camera setup screen. Consent flows to the
   // session's RecordingManager so recording only ever happens with consent.
-  const [recordingConsented, setRecordingConsented] = useState(false);
+  const [recordingConsented, setRecordingConsented] = useState(false)
   useEffect(() => {
-    session.setRecordingConsent(recordingConsented);
-  }, [session, recordingConsented]);
+    session.setRecordingConsent(recordingConsented)
+  }, [session, recordingConsented])
 
   // The recording surfaced to the Results screen for playback/deletion.
-  const [recording, setRecording] = useState<RecordingResult | null>(null);
+  const [recording, setRecording] = useState<RecordingResult | null>(null)
 
   // Participant intake (name, gender, age, declaration, test date/time) captured
   // on the ParticipantInfoScreen. Held in a ref so the completion builder reads
   // the latest value without re-creating the callback, and mirrored in state so
   // the intake screen resets cleanly between runs.
-  const [participant, setParticipant] = useState<ParticipantInfo | null>(null);
-  const participantRef = useRef<ParticipantInfo | null>(null);
+  const [participant, setParticipant] = useState<ParticipantInfo | null>(null)
+  const participantRef = useRef<ParticipantInfo | null>(null)
   useEffect(() => {
-    participantRef.current = participant;
-  }, [participant]);
+    participantRef.current = participant
+  }, [participant])
 
   // Guards single-shot export per completed assessment so the fire-and-forget
   // Sheets POST is not re-sent on re-render.
-  const exportedAssessmentIdRef = useRef<string | null>(null);
+  const exportedAssessmentIdRef = useRef<string | null>(null)
 
-  const label = getScreenLabel(state);
-  const description = getScreenDescription(state);
+  const label = getScreenLabel(state)
+  const description = getScreenDescription(state)
 
   // Record when the timed assessment begins so results have a real start time.
   // The real per-frame analysis is driven inside AssessmentScreen via the shared
   // session (session.runAssessment), so App does not pump frames here.
   useEffect(() => {
     if (state.screen === 'assessment' && state.elapsed === 0) {
-      assessmentStartRef.current = Date.now();
+      assessmentStartRef.current = Date.now()
     }
-  }, [state]);
+  }, [state])
 
   /**
    * Builds the assessment for the completed run. Prefers the real
@@ -161,42 +166,42 @@ function AppInner() {
    * frames were captured, so the workflow always completes end-to-end (Req 1.4).
    */
   const buildCompletedAssessment = useCallback((): PronatorDriftAssessment => {
-    const participantInfo = participantRef.current ?? undefined;
-    const result = session.getLastResult();
+    const participantInfo = participantRef.current ?? undefined
+    const result = session.getLastResult()
     if (result && !result.noValidAssessedArmFrames) {
-      const assessment = buildAssessmentFromAnalysis(result, config);
+      const assessment = buildAssessmentFromAnalysis(result, config)
       // Attach per-arm indicators + the real wrist-drift time series so the
       // Results screen can show LEFT and RIGHT side by side (front-facing mode).
-      const armIndicators = session.getLastArmIndicators();
-      const wristDriftSeries = session.getLastWristDriftSeries();
+      const armIndicators = session.getLastArmIndicators()
+      const wristDriftSeries = session.getLastWristDriftSeries()
       return {
         ...assessment,
         participant: participantInfo,
         leftIndicators: armIndicators?.left,
         rightIndicators: armIndicators?.right,
         wristDriftSeries: wristDriftSeries ?? undefined,
-      };
+      }
     }
-    return { ...buildAssessment(assessmentStartRef.current), participant: participantInfo };
-  }, [config, session]);
+    return { ...buildAssessment(assessmentStartRef.current), participant: participantInfo }
+  }, [config, session])
 
   // On entering completion, surface the session's recording (if any) for the
   // Results screen. The analysis itself was finalized inside the session's
   // runAssessment(); we just wait a tick for it to settle, then mark ready.
   useEffect(() => {
-    if (state.screen !== 'completion') return;
-    let cancelled = false;
+    if (state.screen !== 'completion') return
+    let cancelled = false
     // The session's runAssessment resolves ~when the timer ends; give it a brief
     // moment to store its result before we read it.
     const id = setTimeout(() => {
-      if (cancelled) return;
-      setRecording(session.getRecordingManager().getRecording());
-    }, 150);
+      if (cancelled) return
+      setRecording(session.getRecordingManager().getRecording())
+    }, 150)
     return () => {
-      cancelled = true;
-      clearTimeout(id);
-    };
-  }, [state.screen, session]);
+      cancelled = true
+      clearTimeout(id)
+    }
+  }, [state.screen, session])
 
   // Release prior recording + movement data when starting over or leaving to
   // home (Req 11.5, 18.4).
@@ -204,77 +209,78 @@ function AppInner() {
     if (state.screen === 'welcome') {
       // Full teardown when returning home: stop camera + CV worker, and clear
       // the participant details so a new session starts from a blank intake.
-      session.dispose();
-      setRecording(null);
-      setParticipant(null);
-      exportedAssessmentIdRef.current = null;
+      session.dispose()
+      setRecording(null)
+      setParticipant(null)
+      exportedAssessmentIdRef.current = null
     } else if (state.screen === 'cameraSetup') {
       // New run: release prior analysis + recording, keep camera/CV for reuse.
-      session.reset();
-      setRecording(null);
+      session.reset()
+      setRecording(null)
     }
-  }, [state.screen, session]);
+  }, [state.screen, session])
 
   // Fire the optional Google Sheets export exactly once when the results screen
   // is reached. This is a no-op unless a Web App URL is configured in
   // integrations/sheetsExport.ts (or via the VITE_SHEETS_WEBAPP_URL env var),
   // and it never blocks or affects the UI.
   useEffect(() => {
-    if (state.screen !== 'results') return;
-    const { assessment } = state;
-    if (exportedAssessmentIdRef.current === assessment.assessmentId) return;
-    exportedAssessmentIdRef.current = assessment.assessmentId;
-    exportToSheets(assessment);
-  }, [state]);
+    if (state.screen !== 'results') return
+    const { assessment } = state
+    if (exportedAssessmentIdRef.current === assessment.assessmentId) return
+    exportedAssessmentIdRef.current = assessment.assessmentId
+    exportToSheets(assessment)
+  }, [state])
 
   // Deletes the surfaced recording and releases its on-device resources when the
   // user requests deletion from the Results screen (Req 11.4, 18.4).
   const handleDeleteRecording = useCallback(() => {
-    session.getRecordingManager().delete();
-    setRecording(null);
-  }, [session]);
+    session.getRecordingManager().delete()
+    setRecording(null)
+  }, [session])
 
   // Focus management: move focus to main content heading on screen transitions
   useEffect(() => {
     if (previousScreenRef.current !== state.screen) {
-      previousScreenRef.current = state.screen;
+      previousScreenRef.current = state.screen
 
       // Allow DOM to update, then focus the first heading in the new screen
       requestAnimationFrame(() => {
-        const mainEl = mainContentRef.current;
-        if (!mainEl) return;
+        const mainEl = mainContentRef.current
+        if (!mainEl) return
 
         // Try to focus the first heading in the new screen content
-        const heading = mainEl.querySelector<HTMLElement>('h1, h2, [data-screen-heading]');
+        const heading = mainEl.querySelector<HTMLElement>('h1, h2, [data-screen-heading]')
         if (heading) {
           // Make the heading focusable if it isn't already
           if (!heading.getAttribute('tabindex')) {
-            heading.setAttribute('tabindex', '-1');
+            heading.setAttribute('tabindex', '-1')
           }
-          heading.classList.add('screen-heading');
-          heading.focus();
+          heading.classList.add('screen-heading')
+          heading.focus()
         }
-      });
+      })
     }
-  }, [state.screen]);
+  }, [state.screen])
 
   function renderScreen(currentState: AppState) {
     switch (currentState.screen) {
       case 'welcome':
-        return <WelcomeScreen dispatch={dispatch} />;
+        return <WelcomeScreen dispatch={dispatch} />
       case 'participantInfo':
         return (
           <ParticipantInfoScreen
+            initial={initialParticipant}
             dispatch={(event) => {
               if (event.type === 'PARTICIPANT_INFO_SUBMITTED') {
-                setParticipant(event.participant);
+                setParticipant(event.participant)
               }
-              dispatch(event);
+              dispatch(event)
             }}
           />
-        );
+        )
       case 'safetyConfirmation':
-        return <SafetyConfirmationScreen dispatch={dispatch} />;
+        return <SafetyConfirmationScreen dispatch={dispatch} />
       case 'cameraSetup':
         return (
           <>
@@ -295,22 +301,21 @@ function AppInner() {
                   data-testid="recording-consent-checkbox"
                 />
                 <span data-testid="recording-consent-text">
-                  Record this assessment on my device only. The video is stored
-                  on this device, is never uploaded or transmitted anywhere, and
-                  can be deleted at any time.
+                  Record this assessment on my device only. The video is stored on this device, is
+                  never uploaded or transmitted anywhere, and can be deleted at any time.
                 </span>
               </label>
             </section>
           </>
-        );
+        )
       case 'instruction':
-        return <InstructionScreen dispatch={dispatch} speechSystem={speechSystem} />;
+        return <InstructionScreen dispatch={dispatch} speechSystem={speechSystem} />
       case 'positionValidation':
-        return <PositionValidationScreen dispatch={dispatch} />;
+        return <PositionValidationScreen dispatch={dispatch} />
       case 'calibration':
-        return <CalibrationScreen dispatch={dispatch} />;
+        return <CalibrationScreen dispatch={dispatch} />
       case 'assessment':
-        return <AssessmentScreen dispatch={dispatch} speechSystem={speechSystem ?? undefined} />;
+        return <AssessmentScreen dispatch={dispatch} speechSystem={speechSystem ?? undefined} />
       case 'completion':
         return (
           <CompletionScreen
@@ -318,9 +323,15 @@ function AppInner() {
             speechSystem={speechSystem ?? undefined}
             buildAssessment={buildCompletedAssessment}
           />
-        );
+        )
       case 'failure':
-        return <FailureScreen dispatch={dispatch} speechSystem={speechSystem} reason={currentState.reason} />;
+        return (
+          <FailureScreen
+            dispatch={dispatch}
+            speechSystem={speechSystem}
+            reason={currentState.reason}
+          />
+        )
       case 'results':
         return (
           <ResultsScreen
@@ -329,48 +340,43 @@ function AppInner() {
             recording={recording}
             onDeleteRecording={handleDeleteRecording}
           />
-        );
+        )
       default:
         return (
           <div className="app__screen-placeholder" role="status">
             <h2>{label}</h2>
             <p>{description}</p>
           </div>
-        );
+        )
     }
   }
 
   return (
     <BrowserCompatibilityGate>
-    <div className="app">
-      {/* Skip to content link for keyboard users */}
-      <a href="#main-content" className="skip-to-content">
-        Skip to main content
-      </a>
+      <div className="app">
+        {/* Skip to content link for keyboard users */}
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
 
-      {/* Screen transition announcement for screen readers */}
-      <div className="sr-only" aria-live="assertive" aria-atomic="true" role="status">
-        {label}: {description}
-      </div>
-
-      <div className="app__portrait-container">
-        <main
-          id="main-content"
-          ref={mainContentRef}
-          className="app__screen"
-          aria-label={label}
-        >
-          {renderScreen(state)}
-        </main>
-      </div>
-      {import.meta.env.DEV && (
-        <div className="app__state-indicator" aria-hidden="true">
-          state: {state.screen}
+        {/* Screen transition announcement for screen readers */}
+        <div className="sr-only" aria-live="assertive" aria-atomic="true" role="status">
+          {label}: {description}
         </div>
-      )}
-    </div>
+
+        <div className="app__portrait-container">
+          <main id="main-content" ref={mainContentRef} className="app__screen" aria-label={label}>
+            {renderScreen(state)}
+          </main>
+        </div>
+        {import.meta.env.DEV && (
+          <div className="app__state-indicator" aria-hidden="true">
+            state: {state.screen}
+          </div>
+        )}
+      </div>
     </BrowserCompatibilityGate>
-  );
+  )
 }
 
 /**
@@ -378,12 +384,12 @@ function AppInner() {
  * camera, CV worker, calibration baseline, and assessment loop are shared across
  * screens (making the real analysis run end-to-end).
  */
-function App() {
+function App({ initialParticipant }: { initialParticipant?: ParticipantPrefill } = {}) {
   return (
     <AssessmentSessionProvider>
-      <AppInner />
+      <AppInner initialParticipant={initialParticipant} />
     </AssessmentSessionProvider>
-  );
+  )
 }
 
-export default App;
+export default App

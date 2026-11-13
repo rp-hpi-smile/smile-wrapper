@@ -1,11 +1,14 @@
 <template>
   <div class="speech-shell">
-
     <!-- Top navigation bar — mirrors speech/index.html structure -->
     <header class="topbar">
       <div class="topbar-in">
-        <a class="brand" href="#" aria-label="SMILE Speech Signal Lab — home"
-           @click.prevent="go('session')">
+        <a
+          class="brand"
+          href="#"
+          aria-label="SMILE Speech Signal Lab — home"
+          @click.prevent="go('session')"
+        >
           <b>SMILE</b>
           <span>
             <i>Speech Signal Lab</i>
@@ -34,9 +37,9 @@
       <div class="emergency-in">
         <div>
           <b>Not a stroke test and not a medical device.</b>
-          This reports acoustic measurements and how far they sit from reference ranges.
-          No threshold here is clinically validated. Sudden face droop, arm weakness or
-          new speech difficulty — do not record.
+          This reports acoustic measurements and how far they sit from reference ranges. No
+          threshold here is clinically validated. Sudden face droop, arm weakness or new speech
+          difficulty — do not record.
         </div>
         <div class="call">Call 995 now</div>
       </div>
@@ -48,7 +51,6 @@
     <!-- Polite live region for route-change announcements -->
     <div ref="liveRef" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
     <div class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
-
   </div>
 </template>
 
@@ -58,15 +60,27 @@ import '@/modules/speech/src/styles/tokens.css'
 import '@/modules/speech/src/styles/app.css'
 import '@/modules/speech/src/styles/routes.css'
 import { mountSpeech, destroySpeech, navigate } from '@/modules/speech/src/app/library.js'
+import { setParticipant } from '@/modules/speech/src/app/state.js'
+import { useSessionStore } from '@/stores/session.js'
+import { ageFromDob, toSpeechSex } from '@/utils/participant.js'
 
 const mainRef = ref(null)
 const liveRef = ref(null)
+const sessionStore = useSessionStore()
 
 async function go(name) {
   await navigate(name)
 }
 
 onMounted(async () => {
+  // Pre-fill from the session store before the session route renders.
+  // Speech's "Participant code" gets the participant ID, not the full name,
+  // because it is used in export filenames and the optional Sheets row.
+  setParticipant({
+    participant: sessionStore.participant_id || undefined,
+    age: ageFromDob(sessionStore.dob),
+    sex: toSpeechSex(sessionStore.sex),
+  })
   await mountSpeech(mainRef.value, liveRef.value)
 })
 

@@ -6,14 +6,23 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useCameraGuard } from '@/composables/useCameraGuard'
+import { useSessionStore } from '@/stores/session.js'
+import { ageFromDob, toPronatorGender } from '@/utils/participant.js'
 // Stops the camera if the React app left a stream running.
 useCameraGuard()
 
 const mount = ref(null)
+const sessionStore = useSessionStore()
 
 onMounted(async () => {
   const { init } = await import('@/modules/pronator/src/main.tsx')
-  init(mount.value)
+  // Pre-fill the participant form from the intake saved in the session store.
+  // Undefined values are left blank for the participant to complete.
+  init(mount.value, {
+    name: sessionStore.full_name || undefined,
+    gender: toPronatorGender(sessionStore.sex),
+    age: ageFromDob(sessionStore.dob),
+  })
 })
 </script>
 

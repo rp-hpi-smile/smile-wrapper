@@ -344,20 +344,48 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import '@/modules/smilefa/css/app.css'
 import { useCameraGuard } from '@/composables/useCameraGuard'
+import { useSessionStore } from '@/stores/session.js'
+import { toSmileFaGender, yearOfBirthFromDob } from '@/utils/participant.js'
 
 const mount = ref(null)
+const sessionStore = useSessionStore()
 // Stops the camera if the module left a stream running.
 useCameraGuard()
 
-onMounted(async () => {
-  // setParticipant could be called here with data from the Pinia session store,
-  // e.g.: setParticipant(sessionStore.intake)
-  // Wired up fully in Task 4 once the Pinia store is in place.
-  const { init, setParticipant } = await import('@/modules/smilefa/js/app.js')
+/**
+ * Pre-fill the S1 participant inputs from the session store and fire the events
+ * SmileFA listens to so its validation refreshes. Fields stay editable and the
+ * consent checkboxes are left for the participant (setParticipant() would mark
+ * consent as given, so it is deliberately not used here).
+ */
+function prefillParticipant() {
+  const root = mount.value
+  if (!root) return
+  const fire = (el, type) => el.dispatchEvent(new Event(type, { bubbles: true }))
 
-  // TODO (Task 4): inject participant data from Pinia before init
-  // const sessionStore = useSessionStore()
-  // setParticipant(sessionStore.intake)
+  const nameInput = root.querySelector('#participant-name')
+  if (nameInput && sessionStore.full_name) {
+    nameInput.value = sessionStore.full_name
+    fire(nameInput, 'input')
+  }
+
+  const yob = yearOfBirthFromDob(sessionStore.dob)
+  const yobInput = root.querySelector('#participant-yob')
+  if (yobInput && yob !== undefined) {
+    yobInput.value = String(yob)
+    fire(yobInput, 'input')
+  }
+
+  const gender = toSmileFaGender(sessionStore.sex)
+  const genderInput = gender && root.querySelector(`input[name="gender"][value="${gender}"]`)
+  if (genderInput) {
+    genderInput.checked = true
+    fire(genderInput, 'change')
+  }
+}
+
+onMounted(async () => {
+  const { init } = await import('@/modules/smilefa/js/app.js')
 
   await init(mount.value, {
     onComplete: (result) => {
@@ -367,6 +395,9 @@ onMounted(async () => {
       console.log('[SmileFaView] test complete', result)
     },
   })
+
+  // Listeners are wired by init(), so pre-fill afterwards.
+  prefillParticipant()
 })
 
 // onUnmounted(() => {

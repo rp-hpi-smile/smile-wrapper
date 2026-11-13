@@ -12,13 +12,6 @@ const form = reactive({
   full_name: '',
   dob: '',
   sex: '',
-  ethnicity: '',
-  contact_number: '',
-  height: '',
-  weight: '',
-  blood_pressure: '',
-  heart_rate: '',
-  spo2: '',
 })
 
 // All fields must be non-empty strings (or non-zero numbers converted to string)
@@ -40,11 +33,7 @@ watch(
 
 function handleSave() {
   if (!isFormComplete.value) return
-  console.log('Intake form saved', {
-    participant_id: sessionStore.participant_id,
-    session_id: sessionStore.session_id,
-    ...form,
-  })
+  sessionStore.setIntake(form)
   router.push({ name: 'hub' })
 }
 </script>
@@ -92,69 +81,8 @@ function handleSave() {
               <option value="Male">Male</option>
               <option value="Female">Female</option>
               <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
             </select>
-          </div>
-
-          <div class="field">
-            <label for="ethnicity">Ethnicity</label>
-            <input id="ethnicity" v-model="form.ethnicity" type="text" />
-          </div>
-
-          <div class="field">
-            <label for="contact_number">Contact Number</label>
-            <input
-              id="contact_number"
-              v-model="form.contact_number"
-              type="tel"
-              autocomplete="tel"
-            />
-          </div>
-        </fieldset>
-
-        <!-- Right column: Vital Signs & Physical Measurements -->
-        <fieldset class="form-section">
-          <legend>Vital Signs &amp; Physical Measurements</legend>
-
-          <div class="field">
-            <label for="height">Height</label>
-            <div class="input-with-unit">
-              <input id="height" v-model="form.height" type="number" min="0" step="0.1" />
-              <span class="unit">cm</span>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="weight">Weight</label>
-            <div class="input-with-unit">
-              <input id="weight" v-model="form.weight" type="number" min="0" step="0.1" />
-              <span class="unit">kg</span>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="blood_pressure">Blood Pressure</label>
-            <input
-              id="blood_pressure"
-              v-model="form.blood_pressure"
-              type="text"
-              placeholder="e.g. 120/80 mmHg"
-            />
-          </div>
-
-          <div class="field">
-            <label for="heart_rate">Heart Rate</label>
-            <div class="input-with-unit">
-              <input id="heart_rate" v-model="form.heart_rate" type="number" min="0" />
-              <span class="unit">bpm</span>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="spo2">Oxygen Saturation</label>
-            <div class="input-with-unit">
-              <input id="spo2" v-model="form.spo2" type="number" min="0" max="100" />
-              <span class="unit">%</span>
-            </div>
           </div>
         </fieldset>
       </div>
@@ -252,14 +180,8 @@ function handleSave() {
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 480px);
   gap: 2rem;
-}
-
-@media (max-width: 640px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Fieldset / legend */
@@ -270,7 +192,9 @@ function handleSave() {
   border-radius: 6px;
   padding: 1.25rem 1.5rem;
   margin: 0;
-  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5), 0 0 28px rgba(0, 229, 255, 0.2);
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.5),
+    0 0 28px rgba(0, 229, 255, 0.2);
 }
 
 .form-section legend {
@@ -315,7 +239,9 @@ function handleSave() {
   background: #111d35;
   color: #e8eaf0;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
@@ -383,12 +309,18 @@ function handleSave() {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: box-shadow 0.2s, opacity 0.15s;
-  box-shadow: 0 0 12px rgba(255, 107, 0, 0.6), 0 0 30px rgba(255, 107, 0, 0.25);
+  transition:
+    box-shadow 0.2s,
+    opacity 0.15s;
+  box-shadow:
+    0 0 12px rgba(255, 107, 0, 0.6),
+    0 0 30px rgba(255, 107, 0, 0.25);
 }
 
 .btn-save:hover:not(:disabled) {
-  box-shadow: 0 0 18px rgba(255, 107, 0, 0.8), 0 0 40px rgba(255, 107, 0, 0.35);
+  box-shadow:
+    0 0 18px rgba(255, 107, 0, 0.8),
+    0 0 40px rgba(255, 107, 0, 0.35);
 }
 
 .btn-save:focus-visible {

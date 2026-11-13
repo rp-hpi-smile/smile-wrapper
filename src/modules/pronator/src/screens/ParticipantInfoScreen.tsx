@@ -1,9 +1,16 @@
-import { useState, useCallback, useMemo } from 'react';
-import type { AppEvent, ParticipantGender, ParticipantInfo } from '../types/index';
-import './ParticipantInfoScreen.css';
+import { useState, useCallback, useMemo } from 'react'
+import type {
+  AppEvent,
+  ParticipantGender,
+  ParticipantInfo,
+  ParticipantPrefill,
+} from '../types/index'
+import './ParticipantInfoScreen.css'
 
 interface ParticipantInfoScreenProps {
-  dispatch: React.Dispatch<AppEvent>;
+  dispatch: React.Dispatch<AppEvent>
+  /** Optional pre-fill from the host app (declaration is never pre-filled). */
+  initial?: ParticipantPrefill
 }
 
 /** Selectable gender options presented in the intake form. */
@@ -12,10 +19,10 @@ const GENDER_OPTIONS: { value: ParticipantGender; label: string }[] = [
   { value: 'male', label: 'Male' },
   { value: 'other', label: 'Other' },
   { value: 'prefer_not_to_say', label: 'Prefer not to say' },
-];
+]
 
-const MIN_AGE = 1;
-const MAX_AGE = 120;
+const MIN_AGE = 1
+const MAX_AGE = 120
 
 /**
  * ParticipantInfoScreen — intake form shown after Welcome and before the safety
@@ -37,34 +44,31 @@ const MAX_AGE = 120;
  * Nothing entered here leaves the device unless the Sheets export is explicitly
  * configured.
  */
-export function ParticipantInfoScreen({ dispatch }: ParticipantInfoScreenProps) {
-  const [name, setName] = useState('');
-  const [gender, setGender] = useState<ParticipantGender | ''>('');
-  const [age, setAge] = useState('');
-  const [declarationAccepted, setDeclarationAccepted] = useState(false);
-  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+export function ParticipantInfoScreen({ dispatch, initial }: ParticipantInfoScreenProps) {
+  const [name, setName] = useState(initial?.name ?? '')
+  const [gender, setGender] = useState<ParticipantGender | ''>(initial?.gender ?? '')
+  const [age, setAge] = useState(initial?.age !== undefined ? String(initial.age) : '')
+  const [declarationAccepted, setDeclarationAccepted] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
-  const trimmedName = name.trim();
-  const ageNumber = Number.parseInt(age, 10);
+  const trimmedName = name.trim()
+  const ageNumber = Number.parseInt(age, 10)
   const ageValid =
-    age.trim() !== '' &&
-    Number.isFinite(ageNumber) &&
-    ageNumber >= MIN_AGE &&
-    ageNumber <= MAX_AGE;
+    age.trim() !== '' && Number.isFinite(ageNumber) && ageNumber >= MIN_AGE && ageNumber <= MAX_AGE
 
-  const nameValid = trimmedName.length >= 1;
-  const genderValid = gender !== '';
+  const nameValid = trimmedName.length >= 1
+  const genderValid = gender !== ''
 
   const formValid = useMemo(
     () => nameValid && genderValid && ageValid && declarationAccepted,
-    [nameValid, genderValid, ageValid, declarationAccepted]
-  );
+    [nameValid, genderValid, ageValid, declarationAccepted],
+  )
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
-      e.preventDefault();
-      setAttemptedSubmit(true);
-      if (!formValid || gender === '') return;
+      e.preventDefault()
+      setAttemptedSubmit(true)
+      if (!formValid || gender === '') return
 
       const participant: ParticipantInfo = {
         name: trimmedName,
@@ -73,24 +77,23 @@ export function ParticipantInfoScreen({ dispatch }: ParticipantInfoScreenProps) 
         declarationAccepted: true,
         // Capture the exact moment the test session begins.
         testDateTime: new Date().toISOString(),
-      };
-      dispatch({ type: 'PARTICIPANT_INFO_SUBMITTED', participant });
+      }
+      dispatch({ type: 'PARTICIPANT_INFO_SUBMITTED', participant })
     },
-    [formValid, gender, trimmedName, ageNumber, dispatch]
-  );
+    [formValid, gender, trimmedName, ageNumber, dispatch],
+  )
 
   const handleCancel = useCallback(() => {
-    dispatch({ type: 'BACK_TO_WELCOME' });
-  }, [dispatch]);
+    dispatch({ type: 'BACK_TO_WELCOME' })
+  }, [dispatch])
 
   return (
     <div className="participant-screen" role="region" aria-label="Participant Information">
       <header className="participant-screen__header">
         <h1 className="participant-screen__title">Before we begin</h1>
         <p className="participant-screen__description">
-          Please enter your details. This information is stored on your device
-          with your results and is only sent onward if the operator has enabled
-          data collection.
+          Please enter your details. This information is stored on your device with your results and
+          is only sent onward if the operator has enabled data collection.
         </p>
       </header>
 
@@ -191,11 +194,11 @@ export function ParticipantInfoScreen({ dispatch }: ParticipantInfoScreenProps) 
               aria-invalid={attemptedSubmit && !declarationAccepted}
             />
             <span className="participant-screen__checkbox-text">
-              I confirm that the details above are accurate, that I am taking this
-              screening voluntarily, and I understand this tool is a research
-              prototype and screening aid — <strong>not a medical device</strong> and
-              not a substitute for examination by a qualified clinician. I consent
-              to my details and screening results being recorded for this session.
+              I confirm that the details above are accurate, that I am taking this screening
+              voluntarily, and I understand this tool is a research prototype and screening aid —{' '}
+              <strong>not a medical device</strong> and not a substitute for examination by a
+              qualified clinician. I consent to my details and screening results being recorded for
+              this session.
             </span>
           </label>
           {attemptedSubmit && !declarationAccepted && (
@@ -225,9 +228,8 @@ export function ParticipantInfoScreen({ dispatch }: ParticipantInfoScreenProps) 
       </form>
 
       <p className="participant-screen__privacy">
-        The date and time of this test are recorded automatically when you
-        continue.
+        The date and time of this test are recorded automatically when you continue.
       </p>
     </div>
-  );
+  )
 }

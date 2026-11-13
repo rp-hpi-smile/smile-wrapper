@@ -6,14 +6,23 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import '@/modules/plr/styles.css'
 import { useCameraGuard } from '@/composables/useCameraGuard'
+import { useSessionStore } from '@/stores/session.js'
+import { ageFromDob, toPlrGender } from '@/utils/participant.js'
 // Stops the rear camera (and torch) if the module left a stream running.
 useCameraGuard()
 
 const mount = ref(null)
+const sessionStore = useSessionStore()
 
 onMounted(async () => {
   const { init } = await import('@/modules/plr/app/main.js')
-  init(mount.value)
+  // Pre-fill the subject details from the intake saved in the session store.
+  // Undefined values are left blank for the operator to complete.
+  init(mount.value, {
+    name: sessionStore.full_name || undefined,
+    age: ageFromDob(sessionStore.dob),
+    gender: toPlrGender(sessionStore.sex),
+  })
 })
 
 onUnmounted(() => {
