@@ -311,7 +311,9 @@ function AppInner({ initialParticipant }: { initialParticipant?: ParticipantPref
       case 'instruction':
         return <InstructionScreen dispatch={dispatch} speechSystem={speechSystem} />
       case 'positionValidation':
-        return <PositionValidationScreen dispatch={dispatch} />
+        // Reuse the session's live camera. Opening a second stream on the same
+        // camera works on desktop Chrome but fails on Android tablets.
+        return <PositionValidationScreen dispatch={dispatch} stream={session.getStream()} />
       case 'calibration':
         return <CalibrationScreen dispatch={dispatch} />
       case 'assessment':

@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import '@/modules/plr/styles.css'
 import { useCameraGuard } from '@/composables/useCameraGuard'
 import { useSessionStore } from '@/stores/session.js'
@@ -14,21 +14,26 @@ useCameraGuard()
 const mount = ref(null)
 const sessionStore = useSessionStore()
 
+let plr = null
+let disposed = false
+
 onMounted(async () => {
-  const { init } = await import('@/modules/plr/app/main.js')
+  plr = await import('@/modules/plr/app/main.js')
+  // User may have navigated away while the module was loading.
+  if (disposed || !mount.value) return
   // Pre-fill the subject details from the intake saved in the session store.
   // Undefined values are left blank for the operator to complete.
-  init(mount.value, {
+  plr.init(mount.value, {
     name: sessionStore.full_name || undefined,
     age: ageFromDob(sessionStore.dob),
     gender: toPlrGender(sessionStore.sex),
   })
 })
 
-onUnmounted(() => {
-  // The PLR module removes its own resize listener via init(); nothing else
-  // to clean up at the moment, but this lifecycle hook is here as a hook
-  // point for future teardown (e.g. stopping the camera when navigating away).
+onBeforeUnmount(() => {
+  // Stop the protocol loop, tracker, torch and camera, and drop listeners.
+  disposed = true
+  plr?.destroy()
 })
 </script>
 

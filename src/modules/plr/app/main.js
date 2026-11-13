@@ -39,6 +39,8 @@ let engine = null
 let voice = null
 let listener = null
 let openResult = null
+// Bumped on stop/teardown so an in-flight startCapture() knows to bail out.
+let captureToken = 0
 const eyeResults = { left: null, right: null }
 
 // Subject/demographic details collected before a screening. These are stored
@@ -416,14 +418,30 @@ async function startCapture() {
   eyeResults.left = null
   eyeResults.right = null
 
-  camera = new CameraController()
+  // Release anything left from a previous run before opening the camera again
+  // (Android Chrome cannot open a camera that is still held).
+  camera?.stop()
+  tracker?.close()
+  tracker = null
+
+  const token = ++captureToken
+  const cam = new CameraController()
+  camera = cam
   voice = new Voice(config.voice)
 
   try {
-    openResult = await camera.open()
+    openResult = await cam.open()
   } catch (err) {
+    if (token !== captureToken) return
     cueEl.textContent = 'Camera error'
-    statusEl.textContent = 'Could not access the rear camera: ' + err.message
+    statusEl.textContent =
+      'Could not access the rear camera: ' + (err?.name ? `${err.name}: ` : '') + err.message
+    return
+  }
+
+  // Stopped or torn down while the camera was opening: release it.
+  if (token !== captureToken) {
+    cam.stop()
     return
   }
 
@@ -440,7 +458,9 @@ async function startCapture() {
   tracker = new FaceMeshTracker()
   try {
     await tracker.init()
+    if (token !== captureToken) return
   } catch (err) {
+    if (token !== captureToken) return
     cueEl.textContent = 'Model error'
     statusEl.textContent = 'Failed to load the face/iris model: ' + err.message
     return
@@ -590,6 +610,7 @@ function drawOverlay(f) {
 }
 
 function abortCapture() {
+  captureToken++
   listener?.stop()
   listener = null
   engine?.stop()
@@ -940,6 +961,26 @@ export function init(container, prefill = {}) {
   show('intro')
 
   window.addEventListener('resize', _onResize)
+}
+
+/**
+ * Tear down the PLR app: stop the protocol loop, voice trigger, face tracker,
+ * torch and camera, and remove the resize listener. Called by PlrView.vue on
+ * unmount so nothing keeps running (or holding the camera) after navigation.
+ */
+export function destroy() {
+  captureToken++
+  listener?.stop()
+  listener = null
+  engine?.stop()
+  engine = null
+  tracker?.close()
+  tracker = null
+  camera?.stop()
+  camera = null
+  openResult = null
+  window.removeEventListener('resize', _onResize)
+  app = null
 }
 
 function _onResize() {

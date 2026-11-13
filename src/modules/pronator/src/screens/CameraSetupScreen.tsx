@@ -78,6 +78,27 @@ function getPermissionGuidance(): string {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+/** Human-readable reason for a getUserMedia failure (keeps the raw name for support). */
+function describeCameraError(error: Error): string {
+  switch (error.name) {
+    case 'NotAllowedError':
+    case 'PermissionDeniedError':
+      return 'Camera permission was blocked. Allow camera access for this site in the browser settings.'
+    case 'NotReadableError':
+    case 'TrackStartError':
+      return 'The camera is in use by another app or tab, or is still being released. Close other camera apps and tap Retry.'
+    case 'NotFoundError':
+    case 'DevicesNotFoundError':
+      return 'No camera was found on this device.'
+    case 'OverconstrainedError':
+      return 'The selected camera does not support the requested settings.'
+    case 'SecurityError':
+      return 'Camera access requires a secure (HTTPS) connection.'
+    default:
+      return `Camera error: ${error.name || 'Error'}${error.message ? ` (${error.message})` : ''}`
+  }
+}
+
 export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScreenProps) {
   // Shared session that persists the camera + CV pipeline across screens.
   const session = useAssessmentSession()
@@ -90,6 +111,11 @@ export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScr
   const videoRef = useRef<HTMLVideoElement>(null)
   // False once the screen has unmounted; guards late getUserMedia results.
   const mountedRef = useRef(true)
+  // Serialises camera requests; only the latest one may publish its stream.
+  const requestIdRef = useRef(0)
+  const pendingRequestRef = useRef<Promise<void> | null>(null)
+  // Why the last camera request failed (shown on the "denied" screen).
+  const [cameraError, setCameraError] = useState<string | null>(null)
 
   // Available cameras
   const [cameras, setCameras] = useState<MediaDeviceInfo[]>([])
@@ -184,6 +210,24 @@ export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScr
 
   const requestCamera = useCallback(
     async (deviceId?: string) => {
+      // Only the newest request may publish a stream. Older ones (StrictMode's
+      // double effect, retry taps, camera switches) release what they get.
+      const requestId = ++requestIdRef.current
+      const isStale = () => !mountedRef.current || requestId !== requestIdRef.current
+
+      // Wait for any in-flight request to settle first. Android Chrome can't
+      // open the same camera twice at once and fails the second open.
+      const previousRequest = pendingRequestRef.current
+      let settle: () => void = () => {}
+      pendingRequestRef.current = new Promise<void>((resolve) => {
+        settle = resolve
+      })
+      await previousRequest
+      if (isStale()) {
+        settle()
+        return
+      }
+
       try {
         const constraints: MediaStreamConstraints = {
           video: deviceId
@@ -207,9 +251,10 @@ export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScr
 
         const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
 
-        // Screen was left while the permission prompt / device open was pending:
-        // release immediately so the camera isn't held by an orphaned stream.
-        if (!mountedRef.current) {
+        // Screen was left (or a newer request started) while the permission
+        // prompt / device open was pending: release so the camera isn't held
+        // by an orphaned stream.
+        if (isStale()) {
           mediaStream.getTracks().forEach((track) => track.stop())
           return
         }
@@ -245,12 +290,14 @@ export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScr
         // Dispatch CAMERA_READY to state machine
         dispatch({ type: 'CAMERA_READY' })
       } catch (err: unknown) {
+        // A superseded request failing (e.g. device busy because the newer
+        // request holds it) is not an error the user should see.
+        if (isStale()) return
         const error = err instanceof Error ? err : new Error(String(err))
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          setPermissionState('denied')
-        } else {
-          setPermissionState('denied')
-        }
+        setCameraError(describeCameraError(error))
+        setPermissionState('denied')
+      } finally {
+        settle()
       }
     },
     [dispatch, session, testArm],
@@ -466,6 +513,11 @@ export function CameraSetupScreen({ dispatch, testArm = 'left' }: CameraSetupScr
             Camera access is required for the pronator drift assessment. The camera observes both of
             your arms from the front during the test.
           </p>
+          {cameraError && (
+            <p className="camera-setup-screen__permission-message" role="alert">
+              {cameraError}
+            </p>
+          )}
           <p className="camera-setup-screen__permission-guidance">{getPermissionGuidance()}</p>
           <button
             className="camera-setup-screen__btn camera-setup-screen__btn--retry"
