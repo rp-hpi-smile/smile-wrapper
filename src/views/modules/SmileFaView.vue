@@ -460,7 +460,7 @@ onMounted(async () => {
 }
 
 /* Portrait / small-screen guard (mirrors the rule in smilefa's app.css). */
-@media (orientation: portrait), (max-width: 1023px) {
+@media (orientation: portrait), (max-width: 833px) {
   #smilefa-app {
     display: none;
   }
