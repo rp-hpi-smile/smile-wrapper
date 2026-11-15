@@ -866,6 +866,8 @@ function renderResults(result) {
   // Automatic upload to a Google Sheet (only when a Web App URL is set). The
   // session is sent as soon as the results render — no button/tap required.
   // A live status line reports progress; a Retry button appears only on failure.
+  // Tell the Vue wrapper (if present) so the hub nav can show a status badge.
+  window.__smileWrapper?.onModuleStatus?.('plr', SHEETS_WEBAPP_URL ? 'sent' : 'done')
   if (SHEETS_WEBAPP_URL) {
     const sheetStatus = el('div', { class: 'status-line' }, ['Saving to Google Sheets…'])
     actionsPad.appendChild(sheetStatus)

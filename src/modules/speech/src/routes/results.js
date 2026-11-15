@@ -81,10 +81,14 @@ export async function render(root){
   // send duplicates. Fires only when the sheet endpoint is configured, the
   // reading task is analysed, and analysis is not still running.
   function maybeAutoSend(){
-    if(!sheetConfigured() || state.busy || !state.res.read) return;
+    if(state.busy || !state.res.read) return;
+    // Tell the Vue wrapper (if present) so the hub nav can show a status badge.
+    const report = status => window.__smileWrapper?.onModuleStatus?.('speech', status);
+    if(!sheetConfigured()){ report('done'); return; }
     const key = autoSendKey(state.meta.participant, state.res);
     if(sentKeys.has(key)) return;
     sentKeys.add(key);
+    report('sent');
     sendToSheet()
       .then(() => toast('Session sent to Google Sheet'))
       .catch(err => { sentKeys.delete(key); toast('Google Sheet upload failed: ' + err.message); });

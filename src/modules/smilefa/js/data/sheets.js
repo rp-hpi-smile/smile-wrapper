@@ -98,17 +98,21 @@ export function buildRow(result, cfg) {
  */
 export async function sendToGoogleSheet(result, cfg) {
   const gs = cfg && cfg.integrations && cfg.integrations.google_sheets;
-  if (!gs || !gs.enabled || !gs.webAppUrl) return false;
+  // Tell the Vue wrapper (if present) so the hub nav can show a status badge.
+  const report = (status) => window.__smileWrapper?.onModuleStatus?.('smilefa', status);
+  if (!gs || !gs.enabled || !gs.webAppUrl) { report('done'); return false; }
 
   // Require explicit off-device data-sharing consent (checkbox on the consent
   // screen). Without it we never transmit, even when the integration is enabled.
   const consented = result && result.meta && result.meta.consentDataShare === true;
   if (!consented) {
     console.info('[sheets] skipped: participant did not consent to data sharing');
+    report('done');
     return false;
   }
 
   const row = buildRow(result, cfg);
+  report('sent');
   try {
     await fetch(gs.webAppUrl, {
       method: 'POST',

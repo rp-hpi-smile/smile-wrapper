@@ -123,7 +123,18 @@ function normOutcomeFor(
  */
 export function exportToSheets(a: PronatorDriftAssessment): void {
   const url = resolveWebAppUrl();
-  if (!url) return; // disabled unless a URL is configured
+  // Tell the Vue wrapper (if present) so the hub nav can show a status badge.
+  const wrapper = (
+    window as unknown as {
+      __smileWrapper?: { onModuleStatus?: (name: string, status: 'sent' | 'done') => void };
+    }
+  ).__smileWrapper;
+  if (!url) {
+    // disabled unless a URL is configured
+    wrapper?.onModuleStatus?.('pronator', 'done');
+    return;
+  }
+  wrapper?.onModuleStatus?.('pronator', 'sent');
 
   const comparisons = a.normComparisons ?? [];
   const p = a.participant;

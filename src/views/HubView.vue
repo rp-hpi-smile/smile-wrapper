@@ -10,6 +10,15 @@
           <router-link :to="item.route" class="nav-link">
             <span class="icon">{{ item.icon }}</span>
             <span v-if="!collapsed" class="label">{{ item.title }}</span>
+            <span
+              v-if="statusOf(item) !== 'idle'"
+              class="status"
+              :class="statusOf(item)"
+              role="img"
+              :title="statusText(item)"
+              :aria-label="statusText(item)"
+              >✓</span
+            >
           </router-link>
         </li>
       </ul>
@@ -22,15 +31,34 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
+import { useSessionStore } from '@/stores/session.js'
 
 const collapsed = ref(false)
 const items = [
-  { icon: '🙂', title: 'Face', route: '/hub/smilefa' },
-  { icon: '🗨️', title: 'Speech', route: '/hub/speech' },
-  { icon: '👁️', title: 'Pupil', route: '/hub/plr' },
-  { icon: '💪', title: 'Arm', route: '/hub/pronator' },
+  { key: 'smilefa', icon: '🙂', title: 'Face', route: '/hub/smilefa' },
+  { key: 'speech', icon: '🗨️', title: 'Speech', route: '/hub/speech' },
+  { key: 'plr', icon: '👁️', title: 'Pupil', route: '/hub/plr' },
+  { key: 'pronator', icon: '💪', title: 'Arm', route: '/hub/pronator' },
 ]
+
+const sessionStore = useSessionStore()
+const statusOf = (item) => sessionStore.moduleStatus[item.key]
+const statusText = (item) =>
+  statusOf(item) === 'sent'
+    ? `${item.title}: completed, sent to Google Sheets`
+    : `${item.title}: completed, nothing sent`
+
+// Modules report completion through this hook (window.__smileWrapper.onModuleStatus).
+// It lives on the hub, which stays mounted while modules are swapped, so a status
+// is never lost when the user navigates between modules.
+window.__smileWrapper = {
+  ...window.__smileWrapper,
+  onModuleStatus: (name, status) => sessionStore.setModuleStatus(name, status),
+}
+onUnmounted(() => {
+  if (window.__smileWrapper) delete window.__smileWrapper.onModuleStatus
+})
 </script>
 
 <style scoped>
@@ -101,6 +129,43 @@ const items = [
 .nav-link.router-link-exact-active {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.nav-link {
+  position: relative;
+}
+
+/* Completion badge: green = sent to Google Sheets, grey = done, nothing sent. */
+.status {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.status.sent {
+  background: #22c55e;
+}
+
+.status.done {
+  background: #94a3b8;
+}
+
+/* Collapsed sidebar: pin the badge to the corner of the icon. */
+.sidebar.collapsed .status {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 14px;
+  height: 14px;
+  font-size: 10px;
 }
 
 .content {
