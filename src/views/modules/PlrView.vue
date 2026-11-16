@@ -52,7 +52,7 @@ onBeforeUnmount(() => {
  */
 #plr-app {
   margin: -2rem;
-  min-width: 1024px;
+  min-width: 834px;
   min-height: calc(100vh - var(--hub-topbar-height, 0px));
 }
 </style>

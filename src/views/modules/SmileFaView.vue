@@ -430,7 +430,7 @@ onMounted(async () => {
  */
 #smilefa-app {
   margin: -2rem;
-  min-width: 1024px;
+  min-width: 834px;
   /* Undo Pronator's global `.app` flex/overflow rules if that view was visited. */
   display: block;
   align-items: normal;

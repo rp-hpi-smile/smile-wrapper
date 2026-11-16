@@ -50,7 +50,7 @@ onBeforeUnmount(() => {
  */
 #pronator-app {
   margin: -2rem;
-  min-width: 1024px;
+  min-width: 834px;
 }
 
 /* React root: fill the wrapper, don't expand to 100vh */

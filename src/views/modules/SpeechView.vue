@@ -106,7 +106,7 @@ onUnmounted(() => {
 .speech-shell {
   display: flex;
   flex-direction: column;
-  min-width: 1024px;
+  min-width: 834px;
 }
 
 /* Emergency banner sits in normal flow; keep z-index just below sticky topbar */
