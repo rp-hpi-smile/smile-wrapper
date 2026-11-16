@@ -87,17 +87,13 @@ function buildIntro() {
     capBadge('LED torch control', caps.torchSupported),
     capBadge('Voice guidance', caps.speechSupported),
   ])
-  s.appendChild(capCard)
-
   const info = el('div', { class: 'card' }, [
     el('h2', {}, ['How it works']),
     el('p', { class: 'muted' }, [
       "The operator holds the phone and points the REAR camera and LED at the patient's eyes. Voice guidance says which eye to hold on. The app verifies the eye is centered, open, and in focus, then fires the LED and measures the pupil light reflex for each eye. It reports per-eye values and a neutral symmetric / asymmetric indicator.",
     ]),
   ])
-  s.appendChild(info)
-
-  s.appendChild(buildSubjectCard())
+  const subjectCard = buildSubjectCard()
 
   const actions = el('div', { class: 'pad' })
 
@@ -181,8 +177,18 @@ function buildIntro() {
     ]),
   )
 
-  s.appendChild(actions)
+  s.appendChild(cols([capCard, info], [subjectCard, actions]))
   return s
+}
+
+// Two-column wrapper. In portrait and on narrow screens the wrappers use
+// `display: contents`, so children lay out exactly as if unwrapped. In wide
+// landscape the CSS turns them into a two-column grid.
+function cols(left, right) {
+  return el('div', { class: 'cols' }, [
+    el('div', { class: 'col' }, left),
+    el('div', { class: 'col' }, right),
+  ])
 }
 
 function capBadge(label, ok) {
@@ -291,8 +297,6 @@ function buildSettings() {
   })
   card.appendChild(field('Voice guidance', voiceChk))
 
-  s.appendChild(card)
-
   const thrCard = el('div', { class: 'card' }, [
     el('h2', {}, ['Asymmetry threshold']),
     el('p', { class: 'muted' }, [
@@ -317,13 +321,10 @@ function buildSettings() {
       el('div', {}, [thrRange, thrVal]),
     ]),
   )
-  s.appendChild(thrCard)
-
-  s.appendChild(
-    el('div', { class: 'pad' }, [
-      el('button', { class: 'btn primary', onclick: () => show('intro') }, ['Done']),
-    ]),
-  )
+  const donePad = el('div', { class: 'pad' }, [
+    el('button', { class: 'btn primary', onclick: () => show('intro') }, ['Done']),
+  ])
+  s.appendChild(cols([card], [thrCard, donePad]))
   return s
 }
 
@@ -770,7 +771,11 @@ function renderResults(result) {
     ]),
   )
 
-  body.appendChild(buildSubjectTable(result))
+  // Content below the indicator is split into two columns. Order within and
+  // across columns matches the original single-column order.
+  const resLeft = []
+  const resRight = []
+  resLeft.push(buildSubjectTable(result))
 
   const table = el('table', {}, [
     el('thead', {}, [
@@ -804,10 +809,10 @@ function renderResults(result) {
     )
   }
   table.appendChild(tb)
-  body.appendChild(el('div', { class: 'card' }, [el('h2', {}, ['Per-eye metrics']), table]))
+  resLeft.push(el('div', { class: 'card' }, [el('h2', {}, ['Per-eye metrics']), table]))
 
   const a = result.asymmetry
-  body.appendChild(
+  resRight.push(
     el('div', { class: 'card' }, [
       el('h2', {}, ['Interocular asymmetry']),
       kv('Δ % constriction (pts)', num(a.constrictionDeltaPct)),
@@ -834,7 +839,7 @@ function renderResults(result) {
       ]),
     ]),
   )
-  body.appendChild(plotCard)
+  resRight.push(plotCard)
   requestAnimationFrame(() => drawPlot(canvas, result.eyes.left, result.eyes.right))
 
   const q = result.quality
@@ -854,7 +859,8 @@ function renderResults(result) {
     }
     qcard.appendChild(ul)
   }
-  body.appendChild(qcard)
+  resRight.push(qcard)
+  body.appendChild(cols(resLeft, resRight))
 
   const exportRow = el('div', { class: 'row' }, [
     el('button', { class: 'btn', onclick: () => exportJSON(result) }, ['Export JSON']),

@@ -606,3 +606,28 @@ canvas.plot {
 .hidden {
   display: none !important;
 }
+
+/* Two-column wrappers (.cols > .col). Transparent by default so portrait and
+   narrow screens lay out exactly as if the wrappers were not there. */
+.cols,
+.col {
+  display: contents;
+}
+
+/* Wide landscape: two columns for the intro, settings and results screens. */
+@media (orientation: landscape) and (min-width: 900px) {
+  .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 8px;
+    align-items: start;
+  }
+  .col {
+    display: block;
+    min-width: 0;
+  }
+  /* Taller plot now that it has room. */
+  canvas.plot {
+    height: 280px;
+  }
+}
