@@ -27,13 +27,19 @@
     <main class="content">
       <router-view />
     </main>
+
+    <div v-if="allCompleted" class="summary-overlay" :class="{ collapsed }">
+      <button type="button" @click="router.push({ name: 'summary' })">Summary</button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onUnmounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSessionStore } from '@/stores/session.js'
 
+const router = useRouter()
 const collapsed = ref(false)
 const items = [
   { key: 'smilefa', icon: '🙂', title: 'Face', route: '/hub/smilefa' },
@@ -44,6 +50,7 @@ const items = [
 
 const sessionStore = useSessionStore()
 const statusOf = (item) => sessionStore.moduleStatus[item.key]
+const allCompleted = computed(() => items.every((item) => statusOf(item) !== 'idle'))
 const statusText = (item) =>
   statusOf(item) === 'sent'
     ? `${item.title}: completed, sent to Google Sheets`
@@ -180,7 +187,29 @@ onUnmounted(() => {
   display: none; /* Chrome, Safari, Edge */
 }
 
+/* Bottom bar shown once every module is completed; sits to the right of the sidebar. */
+.summary-overlay {
+  position: fixed;
+  bottom: 0;
+  left: 200px;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 2rem;
+  background: rgba(30, 41, 59, 0.95);
+  z-index: 900;
+}
+
+.summary-overlay.collapsed {
+  left: 60px;
+}
+
 @media (max-width: 768px) {
+  .summary-overlay,
+  .summary-overlay.collapsed {
+    left: 0;
+  }
+
   .sidebar {
     position: fixed;
     left: 0;
