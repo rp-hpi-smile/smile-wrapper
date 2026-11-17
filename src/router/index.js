@@ -16,6 +16,11 @@ const router = createRouter({
       component: () => import('../views/IntakeView.vue'),
     },
     {
+      path: '/summary',
+      name: 'summary',
+      component: () => import('../views/SummaryView.vue'),
+    },
+    {
       path: '/hub',
       name: 'hub',
       component: () => import('../views/HubView.vue'),
