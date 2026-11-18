@@ -29,7 +29,9 @@
     </main>
 
     <div v-if="allCompleted" class="summary-overlay" :class="{ collapsed }">
-      <button type="button" @click="router.push({ name: 'summary' })">Summary</button>
+      <button type="button" class="btn-summary" @click="router.push({ name: 'summary' })">
+        Summary
+      </button>
     </div>
   </div>
 </template>
@@ -202,6 +204,37 @@ onUnmounted(() => {
 
 .summary-overlay.collapsed {
   left: 60px;
+}
+
+.btn-summary {
+  padding: 0.75rem 2.5rem;
+  background: #ff6b00;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s,
+    opacity 0.15s;
+  box-shadow:
+    0 0 12px rgba(255, 107, 0, 0.6),
+    0 0 30px rgba(255, 107, 0, 0.25);
+}
+
+.btn-summary:hover {
+  box-shadow:
+    0 0 18px rgba(255, 107, 0, 0.8),
+    0 0 40px rgba(255, 107, 0, 0.35);
+}
+
+.btn-summary:focus-visible {
+  outline: 2px solid #ff6b00;
+  outline-offset: 3px;
 }
 
 @media (max-width: 768px) {
