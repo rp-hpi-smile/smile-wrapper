@@ -165,20 +165,19 @@ async function passWelcomeScreen(page: Page) {
 }
 
 /**
- * Complete the safety confirmation by checking all checkboxes and clicking "I am ready".
+ * Fill in the participant information form and click "Continue".
+ * (The safety confirmation screen is no longer part of the flow; participant
+ * info now leads directly to camera setup.)
  */
-async function passSafetyConfirmation(page: Page) {
-  await expect(page.getByText('Safety Confirmation')).toBeVisible();
+async function passParticipantInfo(page: Page) {
+  await expect(page.getByText('Before we begin')).toBeVisible();
 
-  // Check all safety checkboxes
-  const checkboxes = page.locator('input[type="checkbox"]');
-  const count = await checkboxes.count();
-  for (let i = 0; i < count; i++) {
-    await checkboxes.nth(i).check();
-  }
+  await page.locator('#participant-name').fill('Test Participant');
+  await page.locator('#participant-gender').selectOption({ index: 1 });
+  await page.locator('#participant-age').fill('40');
+  await page.locator('.participant-screen__checkbox').check();
 
-  // Click the "I am ready" button
-  await page.getByRole('button', { name: 'I am ready' }).click();
+  await page.getByRole('button', { name: 'Continue' }).click();
 }
 
 // ─── Test Suites ─────────────────────────────────────────────────────────────
@@ -199,31 +198,25 @@ test.describe('Full Workflow: Welcome → Camera Setup → Position Validation �
     // Verify privacy notice is present
     await expect(page.getByText('locally on your device')).toBeVisible();
 
-    // Step 2: Start Assessment → Safety Confirmation
+    // Step 2: Start Assessment → Participant Information
     await page.getByRole('button', { name: 'Start Assessment' }).click();
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
-    // Verify urgent warning is displayed
-    await expect(page.getByText('seek emergency medical attention')).toBeVisible();
+    // The safety confirmation screen is skipped: Continue is disabled until the form is valid
+    const continueButton = page.getByRole('button', { name: 'Continue' });
+    await expect(continueButton).toBeDisabled();
+    await expect(page.getByText('Safety Confirmation')).not.toBeVisible();
 
-    // Verify "I am ready" button is disabled initially
-    const readyButton = page.getByRole('button', { name: 'I am ready' });
-    await expect(readyButton).toBeDisabled();
+    // Step 3: Fill in the form and proceed straight to Camera Setup
+    await page.locator('#participant-name').fill('Test Participant');
+    await page.locator('#participant-gender').selectOption({ index: 1 });
+    await page.locator('#participant-age').fill('40');
+    await page.locator('.participant-screen__checkbox').check();
+    await expect(continueButton).toBeEnabled();
 
-    // Check all safety items
-    const checkboxes = page.locator('input[type="checkbox"]');
-    const count = await checkboxes.count();
-    expect(count).toBe(5);
-    for (let i = 0; i < count; i++) {
-      await checkboxes.nth(i).check();
-    }
-
-    // Verify button is now enabled
-    await expect(readyButton).toBeEnabled();
-
-    // Step 3: Proceed to Camera Setup
-    await readyButton.click();
+    await continueButton.click();
     await expect(page.getByText('Camera Setup')).toBeVisible();
+    await expect(page.getByText('Safety Confirmation')).not.toBeVisible();
   });
 
   test('How It Works panel expands and collapses', async ({ page }) => {
@@ -244,15 +237,15 @@ test.describe('Full Workflow: Welcome → Camera Setup → Position Validation �
     await expect(page.getByText('Hold both arms straight forward')).not.toBeVisible();
   });
 
-  test('Exit Assessment from safety screen returns to welcome', async ({ page }) => {
+  test('Cancel from participant info screen returns to welcome', async ({ page }) => {
     await mockCameraGranted(page);
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
-    // Click Exit Assessment
-    await page.getByRole('button', { name: 'Exit Assessment' }).click();
+    // Click Cancel
+    await page.getByRole('button', { name: 'Cancel' }).click();
 
     // Should be back at welcome
     await expect(page.locator('h1')).toContainText('Pronator Drift');
@@ -266,7 +259,7 @@ test.describe('Camera Permission Denied Scenario', () => {
 
     // Navigate to camera setup
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Should see permission denied message
     await expect(page.getByText('Camera Access Required')).toBeVisible();
@@ -285,7 +278,7 @@ test.describe('Camera Permission Denied Scenario', () => {
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Verify denied state
     await expect(page.getByText('Camera Access Required')).toBeVisible();
@@ -327,7 +320,7 @@ test.describe('Hands Leaving Frame During Assessment', () => {
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Wait for camera setup screen
     await expect(page.getByText('Camera Setup')).toBeVisible();
@@ -345,7 +338,7 @@ test.describe('Hands Leaving Frame During Assessment', () => {
 
     // Navigate through to trigger failure state programmatically
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Wait for camera setup
     await expect(page.getByText('Camera Setup')).toBeVisible();
@@ -410,7 +403,7 @@ test.describe('Orientation Change During Assessment', () => {
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Wait for camera setup
     await expect(page.getByText('Camera Setup')).toBeVisible();
@@ -468,7 +461,7 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
 
     // Navigate to camera setup (first assessment attempt)
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
     await expect(page.getByText('Camera Setup')).toBeVisible();
 
     // Simulate reaching the results screen by injecting state
@@ -481,7 +474,7 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
     });
 
     // Since we can't fully mock the CV pipeline in e2e, we verify the
-    // return-to-start flow by testing the safety → camera path repeatedly
+    // return-to-start flow by testing the participant info → camera path repeatedly
   });
 
   test('Return Home from results navigates back to welcome', async ({ page }) => {
@@ -490,7 +483,7 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
 
     // First pass: navigate through to camera setup
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
     await expect(page.getByText('Camera Setup')).toBeVisible();
   });
 
@@ -500,18 +493,18 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
 
     // First pass
     await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
     // Exit back to welcome
-    await page.getByRole('button', { name: 'Exit Assessment' }).click();
+    await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.locator('h1')).toContainText('Pronator Drift');
 
     // Second pass — verify we can start again
     await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
-    // Complete safety again
-    await passSafetyConfirmation(page);
+    // Complete participant info again
+    await passParticipantInfo(page);
     await expect(page.getByText('Camera Setup')).toBeVisible();
   });
 
@@ -519,14 +512,14 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
     await mockCameraGranted(page);
     await page.goto('/');
 
-    // Cycle 1: Start → Safety → Exit
+    // Cycle 1: Start → Participant Info → Cancel
     await passWelcomeScreen(page);
-    await page.getByRole('button', { name: 'Exit Assessment' }).click();
+    await page.getByRole('button', { name: 'Cancel' }).click();
     await expect(page.locator('h1')).toContainText('Pronator Drift');
 
-    // Cycle 2: Start → Safety → Ready → Camera Setup
+    // Cycle 2: Start → Participant Info → Continue → Camera Setup
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
     await expect(page.getByText('Camera Setup')).toBeVisible();
 
     // Navigate back (if possible via browser back, or restart)
@@ -535,9 +528,9 @@ test.describe('Multiple Assessment Repeat Cycle', () => {
 
     // Cycle 3: Verify clean state
     await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
-    // All checkboxes should be unchecked in a fresh safety screen
+    // The declaration checkbox should be unchecked on a fresh participant info screen
     const checkboxes = page.locator('input[type="checkbox"]');
     const count = await checkboxes.count();
     for (let i = 0; i < count; i++) {
@@ -594,117 +587,28 @@ test.describe('Keyboard Navigation Through Full Workflow', () => {
     // Activate with Enter
     await page.keyboard.press('Enter');
 
-    // Should navigate to Safety Confirmation
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    // Should navigate to Participant Information
+    await expect(page.getByText('Before we begin')).toBeVisible();
   });
 
-  test('safety checkboxes can be toggled with Space key', async ({ page }) => {
-    await mockCameraGranted(page);
-    await page.goto('/');
 
-    await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
 
-    // Find the first checkbox and focus it
-    const firstCheckbox = page.locator('input[type="checkbox"]').first();
-    await firstCheckbox.focus();
 
-    // Toggle with Space
-    await page.keyboard.press('Space');
-    await expect(firstCheckbox).toBeChecked();
-
-    // Toggle off with Space
-    await page.keyboard.press('Space');
-    await expect(firstCheckbox).not.toBeChecked();
-  });
-
-  test('Tab navigation covers all interactive elements in safety screen', async ({ page }) => {
-    await mockCameraGranted(page);
-    await page.goto('/');
-
-    await passWelcomeScreen(page);
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
-
-    // Tab through: skip link → checkboxes (5) → I am ready button → Exit Assessment button
-    await page.keyboard.press('Tab'); // skip link (if still in DOM)
-
-    // Tab through all checkboxes
-    for (let i = 0; i < 5; i++) {
-      await page.keyboard.press('Tab');
-    }
-
-    // Tab to "I am ready" button
-    await page.keyboard.press('Tab');
-    const readyButton = page.getByRole('button', { name: 'I am ready' });
-    // Button should be disabled (no checkboxes checked)
-    await expect(readyButton).toBeDisabled();
-
-    // Tab to "Exit Assessment"
-    await page.keyboard.press('Tab');
-    const exitButton = page.getByRole('button', { name: 'Exit Assessment' });
-    await expect(exitButton).toBeFocused();
-  });
-
-  test('disabled "I am ready" button cannot be activated via keyboard', async ({ page }) => {
-    await mockCameraGranted(page);
-    await page.goto('/');
-
-    await passWelcomeScreen(page);
-
-    // Focus the "I am ready" button without checking any checkboxes
-    const readyButton = page.getByRole('button', { name: 'I am ready' });
-    await readyButton.focus();
-
-    // Try to activate
-    await page.keyboard.press('Enter');
-
-    // Should still be on Safety Confirmation (not navigated)
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
-  });
-
-  test('full keyboard-only flow from welcome to camera setup', async ({ page }) => {
-    await mockCameraGranted(page);
-    await page.goto('/');
-
-    // Tab to Start Assessment and activate
-    await page.keyboard.press('Tab'); // skip link
-    await page.keyboard.press('Tab'); // Start Assessment
-    await page.keyboard.press('Enter');
-
-    // Now on Safety Confirmation — check all boxes via keyboard
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
-
-    const checkboxes = page.locator('input[type="checkbox"]');
-    const count = await checkboxes.count();
-
-    for (let i = 0; i < count; i++) {
-      await checkboxes.nth(i).focus();
-      await page.keyboard.press('Space');
-    }
-
-    // Tab to "I am ready" and activate
-    const readyButton = page.getByRole('button', { name: 'I am ready' });
-    await readyButton.focus();
-    await page.keyboard.press('Enter');
-
-    // Should be at Camera Setup
-    await expect(page.getByText('Camera Setup')).toBeVisible();
-  });
 
   test('focus moves to new screen heading on navigation', async ({ page }) => {
     await mockCameraGranted(page);
     await page.goto('/');
 
-    // Navigate to safety screen
+    // Navigate to participant info screen
     await passWelcomeScreen(page);
 
     // After navigation, the heading or a screen element should receive focus
     // The app moves focus to the first heading on screen transitions
-    await expect(page.getByText('Safety Confirmation')).toBeVisible();
+    await expect(page.getByText('Before we begin')).toBeVisible();
 
     // Check that an aria-live region announces the new screen
     const announcement = page.locator('[aria-live="assertive"]');
-    await expect(announcement).toContainText('Safety Confirmation');
+    await expect(announcement).toContainText('Participant Information');
   });
 });
 
@@ -714,7 +618,7 @@ test.describe('Assessment Stop Button', () => {
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Camera setup screen is shown
     await expect(page.getByText('Camera Setup')).toBeVisible();
@@ -737,24 +641,13 @@ test.describe('ARIA and Accessibility Attributes', () => {
     await expect(main).toHaveAttribute('aria-label', 'Welcome Screen');
   });
 
-  test('safety screen urgent warning has role="alert"', async ({ page }) => {
-    await mockCameraGranted(page);
-    await page.goto('/');
-
-    await passWelcomeScreen(page);
-
-    // The urgent warning should have role="alert" for screen readers
-    const warning = page.locator('[role="alert"]');
-    await expect(warning).toBeVisible();
-    await expect(warning).toContainText('emergency medical attention');
-  });
 
   test('camera setup screen has appropriate region label', async ({ page }) => {
     await mockCameraGranted(page);
     await page.goto('/');
 
     await passWelcomeScreen(page);
-    await passSafetyConfirmation(page);
+    await passParticipantInfo(page);
 
     // Camera setup should be a labeled region
     const region = page.locator('[role="region"][aria-label="Camera Setup"]');
@@ -773,6 +666,6 @@ test.describe('ARIA and Accessibility Attributes', () => {
     await passWelcomeScreen(page);
 
     // Announcement should update
-    await expect(liveRegion).toContainText('Safety Confirmation');
+    await expect(liveRegion).toContainText('Participant Information');
   });
 });

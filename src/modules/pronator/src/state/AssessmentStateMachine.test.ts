@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { assessmentReducer, initialState } from './AssessmentStateMachine';
-import type { AppState } from '../types/index';
+import type { AppState, AppEvent, ParticipantInfo } from '../types/index';
 import type { Baseline } from '../types/index';
 
 // Helper to create a minimal baseline for testing
@@ -25,6 +25,11 @@ function makeBaseline(): Baseline {
   };
 }
 
+// The reducer ignores the participant payload, so a stub is enough here.
+function submitParticipant(): AppEvent {
+  return { type: 'PARTICIPANT_INFO_SUBMITTED', participant: {} as ParticipantInfo };
+}
+
 describe('AssessmentStateMachine', () => {
   describe('initial state', () => {
     it('starts on the welcome screen', () => {
@@ -35,13 +40,9 @@ describe('AssessmentStateMachine', () => {
   describe('welcome screen transitions', () => {
     const state: AppState = { screen: 'welcome' };
 
-    it('START_ASSESSMENT → safetyConfirmation', () => {
+    it('START_ASSESSMENT → participantInfo', () => {
       const next = assessmentReducer(state, { type: 'START_ASSESSMENT' });
-      expect(next.screen).toBe('safetyConfirmation');
-      if (next.screen === 'safetyConfirmation') {
-        expect(next.confirmed).toBeInstanceOf(Set);
-        expect(next.confirmed.size).toBe(0);
-      }
+      expect(next.screen).toBe('participantInfo');
     });
 
     it('SHOW_HOW_IT_WORKS → howItWorks', () => {
@@ -69,7 +70,24 @@ describe('AssessmentStateMachine', () => {
     });
   });
 
-  describe('safetyConfirmation screen transitions', () => {
+  describe('participantInfo screen transitions', () => {
+    const state: AppState = { screen: 'participantInfo' };
+
+    it('PARTICIPANT_INFO_SUBMITTED → cameraSetup (requesting), skipping safety confirmation', () => {
+      const next = assessmentReducer(state, submitParticipant());
+      expect(next.screen).toBe('cameraSetup');
+      if (next.screen === 'cameraSetup') {
+        expect(next.cameraStatus).toBe('requesting');
+      }
+    });
+
+    it('EXIT_ASSESSMENT → welcome', () => {
+      const next = assessmentReducer(state, { type: 'EXIT_ASSESSMENT' });
+      expect(next.screen).toBe('welcome');
+    });
+  });
+
+  describe('safetyConfirmation screen transitions (legacy, unreachable from the flow)', () => {
     const state: AppState = { screen: 'safetyConfirmation', confirmed: new Set(['a', 'b']) };
 
     it('SAFETY_CONFIRMED → cameraSetup (requesting)', () => {
@@ -657,12 +675,12 @@ describe('AssessmentStateMachine', () => {
     it('traverses the complete workflow from welcome to results', () => {
       let state: AppState = initialState;
 
-      // Welcome → SafetyConfirmation
+      // Welcome → ParticipantInfo
       state = assessmentReducer(state, { type: 'START_ASSESSMENT' });
-      expect(state.screen).toBe('safetyConfirmation');
+      expect(state.screen).toBe('participantInfo');
 
-      // SafetyConfirmation → CameraSetup
-      state = assessmentReducer(state, { type: 'SAFETY_CONFIRMED' });
+      // ParticipantInfo → CameraSetup (safety confirmation is skipped)
+      state = assessmentReducer(state, submitParticipant());
       expect(state.screen).toBe('cameraSetup');
 
       // Camera becomes active
@@ -781,7 +799,7 @@ describe('AssessmentStateMachine', () => {
 
       // Get to assessment
       state = assessmentReducer(state, { type: 'START_ASSESSMENT' });
-      state = assessmentReducer(state, { type: 'SAFETY_CONFIRMED' });
+      state = assessmentReducer(state, submitParticipant());
       state = assessmentReducer(state, { type: 'ALL_CHECKS_PASS' });
       state = assessmentReducer(state, { type: 'CONTINUE_TO_POSITION' });
       state = assessmentReducer(state, { type: 'POSITION_VALID' });

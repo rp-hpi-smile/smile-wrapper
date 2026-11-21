@@ -14,8 +14,25 @@ const form = reactive({
   sex: '',
 })
 
-// All fields must be non-empty strings (or non-zero numbers converted to string)
-const isFormComplete = computed(() => Object.values(form).every((v) => String(v).trim() !== ''))
+const SAFETY_ITEMS = [
+  { id: 'safe-sit-stand', label: 'I can safely sit or stand for the duration of the test' },
+  { id: 'clear-space', label: 'I have clear space around me' },
+  { id: 'device-stable', label: 'My device is securely placed on a stable surface' },
+  { id: 'no-arm-pain', label: 'I am not experiencing pain when raising my arms' },
+  {
+    id: 'stop-if-unwell',
+    label: 'I understand to stop if feeling unwell, dizzy, unstable, or uncomfortable',
+  },
+]
+
+// Safety confirmations (not persisted with the intake data)
+const confirmed = reactive(Object.fromEntries(SAFETY_ITEMS.map((i) => [i.id, false])))
+const allConfirmed = computed(() => SAFETY_ITEMS.every((i) => confirmed[i.id]))
+
+// All fields must be non-empty strings and all safety items confirmed
+const isFormComplete = computed(
+  () => Object.values(form).every((v) => String(v).trim() !== '') && allConfirmed.value,
+)
 
 let dataGenerated = false
 
@@ -55,6 +72,22 @@ function handleSave() {
           <span class="info-value">{{ sessionStore.session_id || '—' }}</span>
         </div>
       </div>
+
+      <div class="urgent-warning" role="alert" aria-live="assertive">
+        <span class="urgent-warning-icon" aria-hidden="true">⚠</span>
+        <div>
+          <strong class="urgent-warning-heading"
+            >STOP immediately and seek emergency medical attention if you experience:</strong
+          >
+          <ul class="urgent-warning-list">
+            <li>Sudden weakness or numbness on one side</li>
+            <li>Difficulty speaking or understanding speech</li>
+            <li>Sudden severe headache</li>
+            <li>Sudden vision problems</li>
+            <li>Loss of balance or coordination</li>
+          </ul>
+        </div>
+      </div>
     </header>
 
     <!-- Two-column form -->
@@ -85,6 +118,21 @@ function handleSave() {
             </select>
           </div>
         </fieldset>
+
+        <!-- Right column: Safety confirmation -->
+        <div class="safety-column">
+          <fieldset class="form-section">
+            <legend>Safety Checklist</legend>
+            <label v-for="item in SAFETY_ITEMS" :key="item.id" class="check-row">
+              <input v-model="confirmed[item.id]" type="checkbox" />
+              <span>{{ item.label }}</span>
+            </label>
+          </fieldset>
+
+          <p class="seated-recommendation">
+            We recommend performing this test while seated if you are uncertain about your balance.
+          </p>
+        </div>
       </div>
 
       <!-- Footer -->
@@ -180,8 +228,79 @@ function handleSave() {
 
 .form-grid {
   display: grid;
-  grid-template-columns: minmax(0, 480px);
+  grid-template-columns: minmax(0, 480px) minmax(0, 560px);
   gap: 2rem;
+  align-items: start;
+  justify-content: center;
+}
+
+@media (max-width: 1100px) {
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Safety column */
+.safety-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.urgent-warning {
+  flex: 1;
+  max-width: 560px;
+  margin-left: auto;
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: rgba(255, 40, 60, 0.12);
+  border: 1px solid #ff2d4a;
+  border-radius: 6px;
+  color: #ffd9de;
+}
+
+.urgent-warning-icon {
+  font-size: 1.5rem;
+  color: #ff2d4a;
+}
+
+.urgent-warning-heading {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #ff5c73;
+}
+
+.urgent-warning-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.check-row:last-child {
+  margin-bottom: 0;
+}
+
+.check-row input {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.2rem;
+  accent-color: #00e5ff;
+}
+
+.seated-recommendation {
+  margin: 0;
+  color: #6b7a99;
+  font-size: 0.9rem;
 }
 
 /* Fieldset / legend */

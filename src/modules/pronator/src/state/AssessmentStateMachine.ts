@@ -20,14 +20,14 @@
  *   Results → CameraSetup (repeat)
  */
 
-import { useReducer } from 'react';
-import type { AppState, AppEvent } from '../types/index';
+import { useReducer } from 'react'
+import type { AppState, AppEvent } from '../types/index'
 
 // Re-export types for convenience
-export type { AppState, AppEvent };
+export type { AppState, AppEvent }
 
 /** Initial application state – the welcome screen. */
-export const initialState: AppState = { screen: 'welcome' };
+export const initialState: AppState = { screen: 'welcome' }
 
 /**
  * Pure reducer function implementing the assessment state machine.
@@ -36,33 +36,33 @@ export const initialState: AppState = { screen: 'welcome' };
 export function assessmentReducer(state: AppState, event: AppEvent): AppState {
   switch (state.screen) {
     case 'welcome':
-      return handleWelcome(state, event);
+      return handleWelcome(state, event)
     case 'howItWorks':
-      return handleHowItWorks(state, event);
+      return handleHowItWorks(state, event)
     case 'participantInfo':
-      return handleParticipantInfo(state, event);
+      return handleParticipantInfo(state, event)
     case 'safetyConfirmation':
-      return handleSafetyConfirmation(state, event);
+      return handleSafetyConfirmation(state, event)
     case 'cameraSetup':
-      return handleCameraSetup(state, event);
+      return handleCameraSetup(state, event)
     case 'instruction':
-      return handleInstruction(state, event);
+      return handleInstruction(state, event)
     case 'positionValidation':
-      return handlePositionValidation(state, event);
+      return handlePositionValidation(state, event)
     case 'calibration':
-      return handleCalibration(state, event);
+      return handleCalibration(state, event)
     case 'assessmentStart':
-      return handleAssessmentStart(state, event);
+      return handleAssessmentStart(state, event)
     case 'assessment':
-      return handleAssessment(state, event);
+      return handleAssessment(state, event)
     case 'completion':
-      return handleCompletion(state, event);
+      return handleCompletion(state, event)
     case 'failure':
-      return handleFailure(state, event);
+      return handleFailure(state, event)
     case 'results':
-      return handleResults(state, event);
+      return handleResults(state, event)
     default:
-      return state;
+      return state
   }
 }
 
@@ -73,55 +73,56 @@ function handleWelcome(_state: AppState, event: AppEvent): AppState {
     case 'START_ASSESSMENT':
       // Collect participant intake (name, gender, age, declaration, date/time)
       // before the safety checklist.
-      return { screen: 'participantInfo' };
+      return { screen: 'participantInfo' }
     case 'SHOW_HOW_IT_WORKS':
-      return { screen: 'howItWorks' };
+      return { screen: 'howItWorks' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handleParticipantInfo(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'PARTICIPANT_INFO_SUBMITTED':
-      // Participant details captured (in App state); proceed to safety checklist.
-      return { screen: 'safetyConfirmation', confirmed: new Set<string>() };
+      // Participant details captured (in App state). The safety checklist now
+      // lives in the wrapper's IntakeView, so skip the safety screen here.
+      return { screen: 'cameraSetup', cameraStatus: 'requesting' }
     case 'EXIT_ASSESSMENT':
     case 'BACK_TO_WELCOME':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handleHowItWorks(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'BACK_TO_WELCOME':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handleSafetyConfirmation(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'SAFETY_CONFIRMED':
-      return { screen: 'cameraSetup', cameraStatus: 'requesting' };
+      return { screen: 'cameraSetup', cameraStatus: 'requesting' }
     case 'EXIT_ASSESSMENT':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handleCameraSetup(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'CAMERA_READY':
-      return { screen: 'cameraSetup', cameraStatus: 'active' };
+      return { screen: 'cameraSetup', cameraStatus: 'active' }
     case 'ALL_CHECKS_PASS':
-      return { screen: 'instruction' };
+      return { screen: 'instruction' }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -136,28 +137,28 @@ function handleInstruction(_state: AppState, event: AppEvent): AppState {
           highestPriorityFail: null,
           holdProgress: 0,
         },
-      };
+      }
     case 'REPLAY_INSTRUCTIONS':
       // Stay on instruction screen (re-trigger speech externally)
-      return { screen: 'instruction' };
+      return { screen: 'instruction' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handlePositionValidation(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'POSITION_VALID':
-      return { screen: 'calibration', progress: 0 };
+      return { screen: 'calibration', progress: 0 }
     case 'POSITION_TIMEOUT':
       // Go back to instruction screen so user can replay or exit
-      return { screen: 'instruction' };
+      return { screen: 'instruction' }
     case 'REPLAY_INSTRUCTIONS':
-      return { screen: 'instruction' };
+      return { screen: 'instruction' }
     case 'EXIT_ASSESSMENT':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -166,7 +167,7 @@ function handleCalibration(_state: AppState, event: AppEvent): AppState {
     case 'CALIBRATION_COMPLETE':
       // Go straight to the assessment screen, which runs its own spoken
       // start sequence (position confirmed → eyes closed) before the timer.
-      return { screen: 'assessment', elapsed: 0, timeRemaining: 30 };
+      return { screen: 'assessment', elapsed: 0, timeRemaining: 30 }
     case 'CALIBRATION_FAILED':
       // Retry: go back to position validation
       return {
@@ -177,9 +178,9 @@ function handleCalibration(_state: AppState, event: AppEvent): AppState {
           highestPriorityFail: null,
           holdProgress: 0,
         },
-      };
+      }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -189,16 +190,16 @@ function handleAssessmentStart(_state: AppState, event: AppEvent): AppState {
       if (_state.screen === 'assessmentStart') {
         if (_state.speechPhase === 'position') {
           // First speech done → move to eyes_closed phase
-          return { screen: 'assessmentStart', speechPhase: 'eyes_closed' };
+          return { screen: 'assessmentStart', speechPhase: 'eyes_closed' }
         }
         if (_state.speechPhase === 'eyes_closed') {
           // Eyes-closed speech done → start assessment timer
-          return { screen: 'assessment', elapsed: 0, timeRemaining: 30 };
+          return { screen: 'assessment', elapsed: 0, timeRemaining: 30 }
         }
       }
-      return _state;
+      return _state
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -209,21 +210,21 @@ function handleAssessment(_state: AppState, event: AppEvent): AppState {
         screen: 'assessment',
         elapsed: event.elapsed,
         timeRemaining: Math.max(0, 30 - event.elapsed),
-      };
+      }
     case 'ASSESSMENT_COMPLETE':
-      return { screen: 'completion', speechPlaying: true };
+      return { screen: 'completion', speechPlaying: true }
     case 'TRACKING_LOST':
-      return { screen: 'failure', reason: event.reason };
+      return { screen: 'failure', reason: event.reason }
     case 'CAMERA_LOST':
-      return { screen: 'failure', reason: 'Camera access was interrupted' };
+      return { screen: 'failure', reason: 'Camera access was interrupted' }
     case 'TAB_HIDDEN':
-      return { screen: 'failure', reason: 'Browser tab lost visibility' };
+      return { screen: 'failure', reason: 'Browser tab lost visibility' }
     case 'ORIENTATION_CHANGED':
-      return { screen: 'failure', reason: 'Device orientation changed' };
+      return { screen: 'failure', reason: 'Device orientation changed' }
     case 'USER_STOP':
-      return { screen: 'failure', reason: 'Assessment stopped by user' };
+      return { screen: 'failure', reason: 'Assessment stopped by user' }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -231,12 +232,12 @@ function handleCompletion(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'SPEECH_COMPLETE':
       // After completion speech finishes, mark speechPlaying as false
-      return { screen: 'completion', speechPlaying: false };
+      return { screen: 'completion', speechPlaying: false }
     case 'SHOW_RESULTS':
       // Transition to results screen with assessment data
-      return { screen: 'results', assessment: event.assessment };
+      return { screen: 'results', assessment: event.assessment }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -245,24 +246,24 @@ function handleFailure(_state: AppState, event: AppEvent): AppState {
     case 'SPEECH_COMPLETE':
       // After failure speech completes, remain on failure screen
       // (waiting for user to choose repeat or return home)
-      return _state;
+      return _state
     case 'REPEAT_ASSESSMENT':
-      return { screen: 'cameraSetup', cameraStatus: 'requesting' };
+      return { screen: 'cameraSetup', cameraStatus: 'requesting' }
     case 'RETURN_HOME':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     default:
-      return _state;
+      return _state
   }
 }
 
 function handleResults(_state: AppState, event: AppEvent): AppState {
   switch (event.type) {
     case 'RETURN_HOME':
-      return { screen: 'welcome' };
+      return { screen: 'welcome' }
     case 'REPEAT_ASSESSMENT':
-      return { screen: 'cameraSetup', cameraStatus: 'requesting' };
+      return { screen: 'cameraSetup', cameraStatus: 'requesting' }
     default:
-      return _state;
+      return _state
   }
 }
 
@@ -273,5 +274,5 @@ function handleResults(_state: AppState, event: AppEvent): AppState {
  * Returns the current state and a dispatch function for sending events.
  */
 export function useAssessmentStateMachine(): [AppState, React.Dispatch<AppEvent>] {
-  return useReducer(assessmentReducer, initialState);
+  return useReducer(assessmentReducer, initialState)
 }
